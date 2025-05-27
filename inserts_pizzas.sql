@@ -170,3 +170,14 @@ INSERT INTO Composition (id_pizza, id_ingredient) VALUES (24, 31);
 INSERT INTO Composition (id_pizza, id_ingredient) VALUES (24, 11);
 INSERT INTO Composition (id_pizza, id_ingredient) VALUES (24, 14);
 INSERT INTO Composition (id_pizza, id_ingredient) VALUES (24, 19);
+INSERT INTO Client (id, nom, prénom, solde, pizzas_achetées) VALUES (1, 'HAKIM', 'Justine', 74.20, 12);
+INSERT INTO Vehicule (id, type, immatriculation, nombre_utilisations) VALUES 
+(1, 'Moto', 'AB-001-CD', 0),
+(2, 'Voiture', 'AB-002-CD', 0),
+(3, 'Moto', 'AB-003-CD', 0),
+(4, 'Voiture', 'AB-004-CD', 0),
+(5, 'Voiture', 'AB-005-CD', 0);
+INSERT INTO Livreur (id, nom, type_conducteur, nombre_retards) VALUES 
+(1, 'DUPONT', 'A', 2),
+(2, 'MARTIN', 'B', 0),
+(3, 'LEBLANC', 'A', 1);
