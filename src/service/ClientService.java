@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import src.model.Client;
@@ -42,19 +43,18 @@ public class ClientService {
         return result;
     }
 }
-public Client createClient(String nom, String prenom) {
-    String sql = "INSERT INTO Client (nom, prenom) VALUES (?, ?)";
-    try (PreparedStatement ps = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+public Client createClient(String nom, String prenom) throws SQLException {
+    String sql = "INSERT INTO client (nom, prenom, solde, pizzas_achetees, total_depenses) VALUES (?, ?, 0, 0, 0)";
+    try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
         ps.setString(1, nom);
         ps.setString(2, prenom);
         ps.executeUpdate();
         try (ResultSet rs = ps.getGeneratedKeys()) {
             if (rs.next()) {
-                return new Client(nom, prenom);
+                int id = rs.getInt(1);
+                return new Client(id, nom, prenom, 0.0, 0, 0.0);
             }
         }
-    } catch (SQLException e) {
-        e.printStackTrace();
     }
     return null;
 }
@@ -154,6 +154,16 @@ public ClientCommandeStat getMeilleurClient() throws SQLException {
         }
     }
     return commandes;
+}
+public void updateSoldeEtStats(int idClient, double nouveauSolde, int pizzasAchetees, double totalDepenses) throws SQLException {
+    String sql = "UPDATE Client SET solde = ?, pizzas_achetees = ?, total_depenses = ? WHERE id = ?";
+    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        ps.setDouble(1, nouveauSolde);
+        ps.setInt(2, pizzasAchetees);
+        ps.setDouble(3, totalDepenses);
+        ps.setInt(4, idClient);
+        ps.executeUpdate();
+    }
 }
 
 }

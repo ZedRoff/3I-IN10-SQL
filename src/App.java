@@ -309,26 +309,34 @@ public class App {
     }
 
     private void updateFiche() {
-        if (ficheTextArea == null) return;
-        if (connectedUser == null) {
-            ficheTextArea.setText("Aucun utilisateur connecté.");
-            return;
-        }
-        StringBuilder sb = new StringBuilder();
-        sb.append("Informations du client connecté :\n\n");
-        sb.append("Nom : ").append(connectedUser.getNom()).append("\n");
-        sb.append("Prénom : ").append(connectedUser.getPrenom()).append("\n");
-        try {
-            sb.append("Solde : ").append(connectedUser.getSolde()).append(" €\n");
-        } catch (Exception e) {}
-        try {
-            sb.append("Pizzas achetées : ").append(connectedUser.getPizzasAchetees()).append("\n");
-        } catch (Exception e) {}
-        try {
-            sb.append("Total dépenses : ").append(connectedUser.getTotalDepenses()).append(" €\n");
-        } catch (Exception e) {}
-        ficheTextArea.setText(sb.toString());
+    if (ficheTextArea == null) return;
+    if (connectedUser == null) {
+        ficheTextArea.setText("Aucun utilisateur connecté.");
+        return;
     }
+    StringBuilder sb = new StringBuilder();
+    sb.append("Informations du client connecté :\n\n");
+    sb.append("Nom : ").append(connectedUser.getNom()).append("\n");
+    sb.append("Prénom : ").append(connectedUser.getPrenom()).append("\n");
+    try {
+        sb.append("Solde : ").append(connectedUser.getSolde()).append(" €\n");
+    } catch (Exception e) {}
+    try {
+        sb.append("Pizzas achetées : ").append(connectedUser.getPizzasAchetees()).append("\n");
+    } catch (Exception e) {}
+    try {
+        sb.append("Total dépenses : ").append(connectedUser.getTotalDepenses()).append(" €\n");
+    } catch (Exception e) {}
+    // Fidélité
+    int reste = 5 - (connectedUser.getPizzasAchetees() % 5);
+    if (reste == 5) reste = 0;
+    if (reste == 0 && connectedUser.getPizzasAchetees() > 0) {
+        sb.append("🎉 Prochaine commande OFFERTE grâce à la fidélité !\n");
+    } else {
+        sb.append("Fidélité : encore ").append(reste).append(" commande(s) avant une pizza offerte.\n");
+    }
+    ficheTextArea.setText(sb.toString());
+}
     // --- End fiche page ---
 
     // --- Commande page implementation ---
@@ -494,7 +502,12 @@ public class App {
         src.model.Taille taille = tailles.get(idxTaille);
        double prix = pizza.getPrixBase() * taille.getCoefficientPrix();
         // --- Vérification solde ---
-        if (connectedUser.getSolde() < prix) {
+        int commandesAvant = connectedUser.getPizzasAchetees();
+        boolean gratuiteFidelite = ((commandesAvant + 1) % 5 == 0);
+        boolean gratuite = gratuiteFidelite; // sera écrasé si retard > 10min plus loin
+
+        // --- Vérification solde ---
+        if (!gratuite && connectedUser.getSolde() < prix) {
             JOptionPane.showMessageDialog(panel, "Solde insuffisant pour commander cette pizza (" + String.format("%.2f", prix) + " €).", "Solde insuffisant", JOptionPane.WARNING_MESSAGE);
             return;
         }
@@ -524,36 +537,78 @@ public class App {
         statusLabel.setText("Votre pizza est en cours d'expédition...");
 
         Timer timer = new Timer(realTime * 200, ev -> {
-            boolean gratuite = retard > 10;
-            StringBuilder sb = new StringBuilder();
-            sb.append("<html>Votre pizza est arrivée !<br>");
-           sb.append("🍕 Pizza : ").append(pizza.getNom()).append(" (").append(taille.getNom()).append(")<br>");
-            sb.append("🚴 Livreur : ").append(livreur.getNom()).append("<br>");
-            sb.append("⏱️ Temps prévu : ").append(expectedTime).append(" min<br>");
-            sb.append("⏱️ Temps réel : ").append(realTime).append(" min<br>");
-            sb.append("⏳ Retard : ").append(retard).append(" min<br>");
-            if (gratuite) {
-                sb.append("<b style='color:green;'>Pizza OFFERTE (retard &gt; 10 min) !</b><br>");
-            } else {
-                sb.append("<b>Pizza facturée : ").append(String.format("%.2f", prix)).append(" €</b><br>");
-            }
-            sb.append("Solde après commande : ").append(String.format("%.2f", gratuite ? connectedUser.getSolde() : connectedUser.getSolde() - prix)).append(" €<br>");
-            sb.append("</html>");
-            statusLabel.setText(sb.toString());
-            orderButton.setEnabled(true);
+    boolean gratuiteRetard = retard > 10;
+    boolean gratuiteFinale = gratuiteRetard || gratuiteFidelite;
+    StringBuilder sb = new StringBuilder();
+    sb.append("<html>Votre pizza est arrivée !<br>");
+    sb.append("🍕 Pizza : ").append(pizza.getNom()).append(" (").append(taille.getNom()).append(")<br>");
+    sb.append("🚴 Livreur : ").append(livreur.getNom()).append("<br>");
+    sb.append("⏱️ Temps prévu : ").append(expectedTime).append(" min<br>");
+    sb.append("⏱️ Temps réel : ").append(realTime).append(" min<br>");
+    sb.append("⏳ Retard : ").append(retard).append(" min<br>");
+    if (gratuiteRetard) {
+        sb.append("<b style='color:green;'>Pizza OFFERTE (retard &gt; 10 min) !</b><br>");
+    } else if (gratuiteFidelite) {
+        sb.append("<b style='color:orange;'>Pizza OFFERTE grâce à la fidélité !</b><br>");
+    } else {
+        sb.append("<b>Pizza facturée : ").append(String.format("%.2f", prix)).append(" €</b><br>");
+    }
+    sb.append("Solde après commande : ").append(String.format("%.2f", gratuiteFinale ? connectedUser.getSolde() : connectedUser.getSolde() - prix)).append(" €<br>");
+    sb.append("</html>");
+    statusLabel.setText(sb.toString());
+    orderButton.setEnabled(true);
 
-            // Facturation ou gratuité
-            if (!gratuite) {
-                connectedUser.setSolde(connectedUser.getSolde() - prix);
-            }
-            if (retard > 0) {
-                try {
-                    serviceProvider.livreurService.incrementRetard(livreur.getId());
-                } catch (Exception ex) {}
-            }
-            updateFiche();
-            updateSoldeHeader();
-        });
+    // --- Choix véhicule aléatoire ---
+    List<src.model.Vehicule> vehicules = new ArrayList<>();
+    try {
+        vehicules.addAll(serviceProvider.vehiculeService.getVehiculesJamaisServi());
+        if (vehicules.isEmpty()) {
+            // Ajoute ici un fallback si besoin
+        }
+    } catch (Exception ex) {}
+
+    src.model.Vehicule vehicule = vehicules.isEmpty() ? null : vehicules.get((int)(Math.random() * vehicules.size()));
+
+    // --- Enregistrement en base ---
+    try {
+        java.sql.Timestamp now = new java.sql.Timestamp(System.currentTimeMillis());
+        int idVehicule = vehicule != null ? vehicule.getId() : 1; // fallback
+        int idLivraison = serviceProvider.livraisonService.createLivraison(
+            now, retard, connectedUser.getId(), livreur.getId(), idVehicule
+        );
+        serviceProvider.commandePizzaService.createCommandePizza(
+            idLivraison, pizza.getId(), taille.getId(), 1, prix, gratuiteFinale,
+            gratuiteRetard ? "Retard > 10min" : (gratuiteFidelite ? "Fidélité" : null)
+        );
+        // Met à jour le solde et stats client
+        if (!gratuiteFinale) {
+            connectedUser.setSolde(connectedUser.getSolde() - prix);
+            connectedUser.setPizzasAchetees(connectedUser.getPizzasAchetees() + 1);
+            connectedUser.setTotalDepenses(connectedUser.getTotalDepenses() + prix);
+        } else {
+            connectedUser.setPizzasAchetees(connectedUser.getPizzasAchetees() + 1);
+        }
+        serviceProvider.clientService.updateSoldeEtStats(
+            connectedUser.getId(),
+            connectedUser.getSolde(),
+            connectedUser.getPizzasAchetees(),
+            connectedUser.getTotalDepenses()
+        );
+        // Met à jour le nombre de retards du livreur
+        if (retard > 0) {
+            serviceProvider.livreurService.incrementRetard(livreur.getId());
+        }
+        // Met à jour le nombre d'utilisations du véhicule
+        if (vehicule != null) {
+            serviceProvider.vehiculeService.incrementUtilisation(vehicule.getId());
+        }
+    } catch (Exception ex) {
+        JOptionPane.showMessageDialog(panel, "Erreur lors de l'enregistrement de la commande : " + ex.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
+    }
+
+    updateFiche();
+    updateSoldeHeader();
+});
         timer.setRepeats(false);
         timer.start();
     });

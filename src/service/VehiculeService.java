@@ -35,4 +35,11 @@ public class VehiculeService {
             return vehicules;
         }
     }
+    public void incrementUtilisation(int idVehicule) throws SQLException {
+    String sql = "UPDATE Vehicule SET nombre_utilisations = nombre_utilisations + 1 WHERE id = ?";
+    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        ps.setInt(1, idVehicule);
+        ps.executeUpdate();
+    }
+}
 }

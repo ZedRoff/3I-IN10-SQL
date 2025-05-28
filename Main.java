@@ -1,17 +1,10 @@
 
-import java.sql.SQLException;
-import java.util.List;
 import javax.swing.*;
 import src.App;
 import src.Provider.DAOProvider;
 import src.Provider.ServiceProvider;
 import src.SQLManager;
 import src.model.Client;
-import src.model.ClientCommandeStat;
-import src.model.IngredientStat;
-import src.model.LivreurRetardStat;
-import src.model.PizzaStat;
-import src.model.Vehicule;
 
 public class Main {
     SQLManager sqlManager;
@@ -32,7 +25,7 @@ public class Main {
             Main main = new Main();
             main.app.showInterface();
 
-            try {
+            /*try {
 
                  System.out.println("============");
                 // 🚗 Véhicules jamais utilisés
@@ -124,7 +117,7 @@ public class Main {
             } catch (SQLException e) {
                 System.err.println("Erreur SQL :");
                 e.printStackTrace();
-            }
+            }*/
         });
     }
 }

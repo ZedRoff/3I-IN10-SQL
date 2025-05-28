@@ -2,7 +2,9 @@ package src.Provider;
 
 import java.sql.Connection;
 import src.service.ClientService;
+import src.service.CommandePizzaService;
 import src.service.IngredientService;
+import src.service.LivraisonService;
 import src.service.LivreurService;
 import src.service.PizzaService;
 import src.service.VehiculeService;
@@ -15,6 +17,8 @@ public class ServiceProvider {
     public IngredientService ingredientService;
     public LivreurService livreurService;
     public ClientService clientService;
+    public LivraisonService livraisonService;
+    public CommandePizzaService commandePizzaService;
 
     public ServiceProvider(Connection pConn) {
         this.conn = pConn;
@@ -23,6 +27,8 @@ public class ServiceProvider {
         this.pizzaService = new PizzaService(conn);
         this.ingredientService = new IngredientService(conn);
         this.livreurService = new LivreurService(conn);
-        
+        this.livraisonService = new LivraisonService(conn);
+        this.commandePizzaService = new CommandePizzaService(conn);
+
     }
 }

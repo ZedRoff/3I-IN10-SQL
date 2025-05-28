@@ -10,4 +10,13 @@ public class Vehicule {
         this.type = type;
         this.immatriculation = immatriculation;
     }
+    public int getId() {
+        return id;
+    }
+    public String getType() {
+        return type;
+    }
+    public String getImmatriculation() {
+        return immatriculation;
+    }
 }
