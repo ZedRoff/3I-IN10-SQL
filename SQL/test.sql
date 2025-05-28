@@ -1,3 +1,0 @@
-CREATE TABLE IF NOT EXISTS ougoug(
-    name VARCHAR(255) NOT NULL
-);

@@ -9,7 +9,7 @@ public class SQLManager {
     String DB_USER;
     String DB_PASSWORD;
     public SQLManager() {
-         DB_URL = "jdbc:mysql://localhost:3306/pizzaria";
+         DB_URL = "jdbc:mysql://127.0.0.1:3306/pizzeria";
         DB_USER= "root";
         DB_PASSWORD = "";
     }
@@ -28,6 +28,9 @@ public void connectDatabase() {
     } catch (SQLException e) {
             System.out.println("Erreur connexion DB.");
             e.printStackTrace();
-        }
+    }
 }
+public Connection getConnection() {
+        return conn;
+    }
 }

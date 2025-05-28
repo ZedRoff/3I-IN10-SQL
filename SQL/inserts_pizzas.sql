@@ -1,35 +1,35 @@
-INSERT INTO Ingrédient (id, nom) VALUES (1, 'Anchois');
-INSERT INTO Ingrédient (id, nom) VALUES (2, 'Artichaut');
-INSERT INTO Ingrédient (id, nom) VALUES (3, 'Aubergine');
-INSERT INTO Ingrédient (id, nom) VALUES (4, 'Calamar');
-INSERT INTO Ingrédient (id, nom) VALUES (5, 'Champignons');
-INSERT INTO Ingrédient (id, nom) VALUES (6, 'Chorizo');
-INSERT INTO Ingrédient (id, nom) VALUES (7, 'Courgette');
-INSERT INTO Ingrédient (id, nom) VALUES (8, 'Crème fraîche');
-INSERT INTO Ingrédient (id, nom) VALUES (9, 'Câpres');
-INSERT INTO Ingrédient (id, nom) VALUES (10, 'Fontina');
-INSERT INTO Ingrédient (id, nom) VALUES (11, 'Fromage');
-INSERT INTO Ingrédient (id, nom) VALUES (12, 'Fromage de chèvre');
-INSERT INTO Ingrédient (id, nom) VALUES (13, 'Gorgonzola');
-INSERT INTO Ingrédient (id, nom) VALUES (14, 'Jambon');
-INSERT INTO Ingrédient (id, nom) VALUES (15, 'Jambon d’italie');
-INSERT INTO Ingrédient (id, nom) VALUES (16, 'Lardons');
-INSERT INTO Ingrédient (id, nom) VALUES (17, 'Merguez');
-INSERT INTO Ingrédient (id, nom) VALUES (18, 'Mozzarella');
-INSERT INTO Ingrédient (id, nom) VALUES (19, 'Oeuf');
-INSERT INTO Ingrédient (id, nom) VALUES (20, 'Oeufs');
-INSERT INTO Ingrédient (id, nom) VALUES (21, 'Oignon');
-INSERT INTO Ingrédient (id, nom) VALUES (22, 'Olives');
-INSERT INTO Ingrédient (id, nom) VALUES (23, 'Parmesan');
-INSERT INTO Ingrédient (id, nom) VALUES (24, 'Persillade');
-INSERT INTO Ingrédient (id, nom) VALUES (25, 'Poivron');
-INSERT INTO Ingrédient (id, nom) VALUES (26, 'Pomme de terre');
-INSERT INTO Ingrédient (id, nom) VALUES (27, 'Poulet');
-INSERT INTO Ingrédient (id, nom) VALUES (28, 'Reblochon');
-INSERT INTO Ingrédient (id, nom) VALUES (29, 'Saumon fumé');
-INSERT INTO Ingrédient (id, nom) VALUES (30, 'Thon');
-INSERT INTO Ingrédient (id, nom) VALUES (31, 'Tomate');
-INSERT INTO Ingrédient (id, nom) VALUES (32, 'Viande hachée');
+INSERT INTO Ingredient (id, nom) VALUES (1, 'Anchois');
+INSERT INTO Ingredient (id, nom) VALUES (2, 'Artichaut');
+INSERT INTO Ingredient (id, nom) VALUES (3, 'Aubergine');
+INSERT INTO Ingredient (id, nom) VALUES (4, 'Calamar');
+INSERT INTO Ingredient (id, nom) VALUES (5, 'Champignons');
+INSERT INTO Ingredient (id, nom) VALUES (6, 'Chorizo');
+INSERT INTO Ingredient (id, nom) VALUES (7, 'Courgette');
+INSERT INTO Ingredient (id, nom) VALUES (8, 'Crème fraîche');
+INSERT INTO Ingredient (id, nom) VALUES (9, 'Câpres');
+INSERT INTO Ingredient (id, nom) VALUES (10, 'Fontina');
+INSERT INTO Ingredient (id, nom) VALUES (11, 'Fromage');
+INSERT INTO Ingredient (id, nom) VALUES (12, 'Fromage de chèvre');
+INSERT INTO Ingredient (id, nom) VALUES (13, 'Gorgonzola');
+INSERT INTO Ingredient (id, nom) VALUES (14, 'Jambon');
+INSERT INTO Ingredient (id, nom) VALUES (15, 'Jambon d’italie');
+INSERT INTO Ingredient (id, nom) VALUES (16, 'Lardons');
+INSERT INTO Ingredient (id, nom) VALUES (17, 'Merguez');
+INSERT INTO Ingredient (id, nom) VALUES (18, 'Mozzarella');
+INSERT INTO Ingredient (id, nom) VALUES (19, 'Oeuf');
+INSERT INTO Ingredient (id, nom) VALUES (20, 'Oeufs');
+INSERT INTO Ingredient (id, nom) VALUES (21, 'Oignon');
+INSERT INTO Ingredient (id, nom) VALUES (22, 'Olives');
+INSERT INTO Ingredient (id, nom) VALUES (23, 'Parmesan');
+INSERT INTO Ingredient (id, nom) VALUES (24, 'Persillade');
+INSERT INTO Ingredient (id, nom) VALUES (25, 'Poivron');
+INSERT INTO Ingredient (id, nom) VALUES (26, 'Pomme de terre');
+INSERT INTO Ingredient (id, nom) VALUES (27, 'Poulet');
+INSERT INTO Ingredient (id, nom) VALUES (28, 'Reblochon');
+INSERT INTO Ingredient (id, nom) VALUES (29, 'Saumon fumé');
+INSERT INTO Ingredient (id, nom) VALUES (30, 'Thon');
+INSERT INTO Ingredient (id, nom) VALUES (31, 'Tomate');
+INSERT INTO Ingredient (id, nom) VALUES (32, 'Viande hachée');
 INSERT INTO Pizza (id, nom, prix_base) VALUES (1, 'Giovanni', 13.50);
 INSERT INTO Pizza (id, nom, prix_base) VALUES (2, 'Palermo', 13.00);
 INSERT INTO Pizza (id, nom, prix_base) VALUES (3, 'Regina', 12.00);
@@ -170,7 +170,7 @@ INSERT INTO Composition (id_pizza, id_ingredient) VALUES (24, 31);
 INSERT INTO Composition (id_pizza, id_ingredient) VALUES (24, 11);
 INSERT INTO Composition (id_pizza, id_ingredient) VALUES (24, 14);
 INSERT INTO Composition (id_pizza, id_ingredient) VALUES (24, 19);
-INSERT INTO Client (id, nom, prénom, solde, pizzas_achetées) VALUES (1, 'HAKIM', 'Justine', 74.20, 12);
+INSERT INTO Client (id, nom, prenom, solde, pizzas_achetees) VALUES (1, 'HAKIM', 'Justine', 74.20, 12);
 INSERT INTO Vehicule (id, type, immatriculation, nombre_utilisations) VALUES 
 (1, 'Moto', 'AB-001-CD', 0),
 (2, 'Voiture', 'AB-002-CD', 0),
@@ -181,3 +181,21 @@ INSERT INTO Livreur (id, nom, type_conducteur, nombre_retards) VALUES
 (1, 'DUPONT', 'A', 2),
 (2, 'MARTIN', 'B', 0),
 (3, 'LEBLANC', 'A', 1);
+
+-- Insertion des tailles prédéfinies
+INSERT INTO Taille (nom, coefficient_prix) VALUES 
+('naine', 0.67),
+('humaine', 1.0),
+('ogresse', 1.33);
+
+INSERT INTO Livraison (date, retard, id_client, id_livreur, id_vehicule) VALUES 
+('2024-05-01 19:30:00', 0, 1, 1, 1),
+('2024-05-02 20:15:00', 5, 1, 3, 2),
+('2024-05-03 17:15:00', 10, 1, 1, 2);
+
+INSERT INTO Commande_pizza (id_livraison, id_pizza, id_taille, quantite, prix_facture, est_gratuite, raison_gratuite) VALUES 
+(1, 1, 2, 1, 13.50, FALSE, NULL),
+(1, 2, 1, 2, 17.42, TRUE, 'Fidélité client'),
+(2, 3, 3, 1, 15.96, FALSE, NULL);
+
+

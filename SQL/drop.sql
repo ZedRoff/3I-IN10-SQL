@@ -1,0 +1,9 @@
+DROP TABLE Commande_pizza;
+DROP TABLE Composition;
+DROP TABLE Livraison;
+DROP TABLE Pizza;
+DROP TABLE Ingredient;
+DROP TABLE Client;
+DROP TABLE Livreur;
+DROP TABLE Vehicule;
+DROP TABLE Taille;

@@ -1,0 +1,9 @@
+DESCRIBE Client;
+DESCRIBE Pizza;
+DESCRIBE Ingredient;
+DESCRIBE Vehicule;
+DESCRIBE Livraison;
+DESCRIBE Composition;
+DESCRIBE Livreur;
+DESCRIBE Commande_Pizza;
+DESCRIBE Taille;
