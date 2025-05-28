@@ -136,4 +136,24 @@ public ClientCommandeStat getMeilleurClient() throws SQLException {
         }
         return stats;
     }
+    public List<Integer> getCommandesClient(int clientId) throws SQLException {
+    String sql = """
+        SELECT id
+        FROM Livraison
+        WHERE id_client = ?
+        ORDER BY date_livraison DESC
+    """;
+
+    List<Integer> commandes = new ArrayList<>();
+    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        ps.setInt(1, clientId);
+        try (ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                commandes.add(rs.getInt("id"));
+            }
+        }
+    }
+    return commandes;
+}
+
 }

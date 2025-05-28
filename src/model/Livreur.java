@@ -11,6 +11,10 @@ public class Livreur {
         this.typeConducteur = typeConducteur;
         this.nombreRetards = nombreRetards;
     }
+ public String getNom() { return nom; }
+   public int getId() { return id; }
+    public String getTypeConducteur() { return typeConducteur; }
+    public int getNombreRetards() { return nombreRetards; }
 
    
 }

@@ -9,5 +9,7 @@ public class Pizza {
         this.nom = nom;
         this.prixBase = prixBase;
     }
-    // Getters and setters...
+     public int getId() { return id; }
+    public String getNom() { return nom; }
+    public double getPrixBase() { return prixBase; }
 }

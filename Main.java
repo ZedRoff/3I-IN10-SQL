@@ -24,7 +24,8 @@ public class Main {
         sqlManager.connectDatabase();
         serviceProvider = new ServiceProvider(sqlManager.getConnection());
         daoProvider = new DAOProvider(sqlManager.getConnection());
-        app = new App();
+        app = new App(serviceProvider);
+
     }
       public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {

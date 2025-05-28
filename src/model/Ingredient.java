@@ -8,5 +8,6 @@ public class Ingredient {
         this.id = id;
         this.nom = nom;
     }
-    // Getters and setters...
+     public int getId() { return id; }
+    public String getNom() { return nom; }
 }

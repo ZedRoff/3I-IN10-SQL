@@ -4,6 +4,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import src.model.Livreur;
 import src.model.LivreurRetardStat;
 
 public class LivreurService {
@@ -37,5 +40,28 @@ public class LivreurService {
         return null;
     }
 
+}
+public List<Livreur> getAllLivreurs() throws SQLException {
+        List<Livreur> livreurs = new ArrayList<>();
+        String sql = "SELECT id, nom, type_conducteur, nombre_retards FROM Livreur";
+        try (PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                livreurs.add(new Livreur(
+                    rs.getInt("id"),
+                    rs.getString("nom"),
+                    rs.getString("type_conducteur"),
+                    rs.getInt("nombre_retards")
+                ));
+            }
+        }
+        return livreurs;
+    }
+    public void incrementRetard(int livreurId) throws SQLException {
+    String sql = "UPDATE Livreur SET nombre_retards = nombre_retards + 1 WHERE id = ?";
+    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        ps.setInt(1, livreurId);
+        ps.executeUpdate();
+    }
 }
 }
