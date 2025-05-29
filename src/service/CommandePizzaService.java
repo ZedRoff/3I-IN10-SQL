@@ -21,4 +21,15 @@ public class CommandePizzaService {
             ps.executeUpdate();
         }
     }
+    public double getChiffreAffairesTotal() throws SQLException {
+    String sql = "SELECT SUM(prix_facture) FROM Commande_pizza WHERE est_gratuite = FALSE";
+    try (PreparedStatement ps = conn.prepareStatement(sql);
+         ResultSet rs = ps.executeQuery()) {
+        if (rs.next()) {
+            return rs.getDouble(1);
+        }
+    }
+    return 0.0;
+}
+
 }

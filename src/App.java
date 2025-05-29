@@ -18,108 +18,171 @@ public class App {
     private JTextArea statsTextArea;
     private JTextArea ficheTextArea;
     private JLabel soldeHeaderLabel;
+    // Couleurs italiennes
+    Color rossoPomodoro = new Color(198, 53, 53); // Rouge tomate
+    Color verdeOliva = new Color(170, 210, 100);   // Vert olive
+    Color biancoPanna = new Color(252, 245, 229); // Blanc crème
+    Color gialloOro = new Color(255, 215, 0);     // Or
 
     public App(ServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
     }
 
-    public void showInterface() {
-        JFrame frame = new JFrame("RaPizz");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
-        frame.setLayout(new BorderLayout());
+public void showInterface() {
+    JFrame frame = new JFrame("RaPizz");
+    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+    frame.setLayout(new BorderLayout());
 
-        // Header
-        JPanel header = new JPanel(new BorderLayout());
-        header.setBackground(new Color(30, 30, 60));
-        header.setBorder(new EmptyBorder(20, 20, 20, 20));
+    // Fonts
+    Font titleFont = new Font("Verdana", Font.BOLD, 38);
+    Font buttonFont = new Font("Verdana", Font.BOLD, 16);
+    Font navFont = new Font("Verdana", Font.PLAIN, 18);
 
-        // Title Panel
-        JLabel titleLabel = new JLabel("<html><span style='font-size:32px; color:#FFD700;'>RaPizz</span></html>");
-        titleLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        titleLabel.addMouseListener(createPageSwitchListener("home"));
+    // Header
+    JPanel header = new JPanel(new BorderLayout());
+    header.setBackground(rossoPomodoro);
+    header.setBorder(new EmptyBorder(10, 40, 10, 40));
 
-        JPanel titlePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        titlePanel.setOpaque(false);
-        titlePanel.add(titleLabel);
-        header.add(titlePanel, BorderLayout.WEST);
+    // Titre RaPizz
+    JLabel titleLabel = new JLabel("RaPizz");
+    titleLabel.setFont(titleFont);
+    titleLabel.setForeground(gialloOro);
+    titleLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+    titleLabel.addMouseListener(createPageSwitchListener("home"));
 
-        // Nav Panel
-        JPanel navPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 30));
-        navPanel.setOpaque(false);
+    ImageIcon pizzaIcon = new ImageIcon(new ImageIcon("pizzeria.png").getImage().getScaledInstance(50, 50, Image.SCALE_SMOOTH));
+    JLabel iconLabel = new JLabel(pizzaIcon);
 
-        navPanel.add(createNavLabel("🏠 Accueil", "home"));
-        navPanel.add(createNavLabel("🧾 Commande", "commande"));
-        navPanel.add(createNavLabel("📊 Statistiques", "stats"));
-        navPanel.add(createNavLabel("📋 Fiche", "fiche"));
+    JPanel titlePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 0));
+    titlePanel.setOpaque(false);
+    titlePanel.add(iconLabel);
+    titlePanel.add(titleLabel);
+    header.add(titlePanel, BorderLayout.WEST);
 
-        header.add(navPanel, BorderLayout.CENTER);
+    // Nav Panel
+    JPanel navPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 40, 10));
+    navPanel.setOpaque(false);
 
-        // Login Button
-        loginButton = new JButton("Se Connecter");
-        loginButton.setFont(new Font("Arial", Font.BOLD, 14));
-        loginButton.setBackground(new Color(70, 130, 180));
-        loginButton.setForeground(Color.WHITE);
-        loginButton.setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 16));
-        loginButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        loginButton.addActionListener(e -> showLoginDialog(frame));
+    String[] navTexts = {"Accueil", "Commander", "Statistiques", "Compte"};
+    String[] iconPaths = {"pizza.png", "order.png", "food.png", "profile.png"};
+    String[] cards = {"home", "commande", "stats", "fiche"};
 
-        soldeHeaderLabel = new JLabel();
-        soldeHeaderLabel.setFont(new Font("Arial", Font.BOLD, 14));
-        soldeHeaderLabel.setForeground(Color.WHITE);
-        updateSoldeHeader(); // Affiche le solde initial
+    for (int i = 0; i < navTexts.length; i++) {
+        ImageIcon navIcon = new ImageIcon(new ImageIcon(iconPaths[i]).getImage().getScaledInstance(40, 40, Image.SCALE_SMOOTH));
+        JLabel navLabel = new JLabel(navTexts[i], navIcon, JLabel.CENTER);
+        navLabel.setFont(navFont);
+        navLabel.setForeground(biancoPanna);
+        navLabel.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+        navLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        navLabel.setHorizontalTextPosition(JLabel.RIGHT);
+        navLabel.setIconTextGap(10);
+        navLabel.addMouseListener(createPageSwitchListener(cards[i]));
 
-        JPanel loginPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        loginPanel.setOpaque(false);
-        loginPanel.add(soldeHeaderLabel); // Ajoute le label du solde AVANT le bouton
-        loginPanel.add(loginButton);
-        header.add(loginPanel, BorderLayout.EAST);
+        navLabel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                navLabel.setForeground(gialloOro);
+            }
 
-        // Main Panel
-        cardLayout = new CardLayout();
-        mainPanel = new JPanel(cardLayout);
+            @Override
+            public void mouseExited(MouseEvent e) {
+                navLabel.setForeground(biancoPanna);
+            }
+        });
 
-        mainPanel.add(createHomePage(), "home");
-        mainPanel.add(createCommandePage(), "commande");
-        mainPanel.add(createStatsPage(), "stats");
-        mainPanel.add(createFichePage(), "fiche");
-
-        // Footer
-        JPanel footer = new JPanel();
-        footer.setBackground(new Color(30, 30, 60));
-        footer.setPreferredSize(new Dimension(0, 50));
-        footer.add(new JLabel("<html><font color='white'>© 2025 RaPizz Inc.</font></html>"));
-
-        // Assemble
-        frame.add(header, BorderLayout.NORTH);
-        frame.add(mainPanel, BorderLayout.CENTER);
-        frame.add(footer, BorderLayout.SOUTH);
-        frame.setVisible(true);
+        navPanel.add(navLabel);
     }
 
-    private JPanel createStatsPage() {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBackground(new Color(245, 248, 250));
+    header.add(navPanel, BorderLayout.CENTER);
 
-        statsTextArea = new JTextArea();
-        statsTextArea.setEditable(false);
-        statsTextArea.setFont(new Font("Monospaced", Font.PLAIN, 14));
-        statsTextArea.setMargin(new Insets(15, 15, 15, 15));
-        statsTextArea.setBackground(Color.WHITE);
-        statsTextArea.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220)));
+    // Login Panel
+    loginButton = new JButton("Accedi");
+    loginButton.setFont(buttonFont);
+    loginButton.setBackground(verdeOliva);
+    loginButton.setForeground(Color.WHITE);
+    loginButton.setBorder(BorderFactory.createEmptyBorder(10, 25, 10, 25));
+    loginButton.setFocusPainted(false);
+    loginButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+    loginButton.addActionListener(e -> showLoginDialog(frame));
+    loginButton.addMouseListener(new MouseAdapter() {
+        public void mouseEntered(MouseEvent evt) {
+            loginButton.setBackground(verdeOliva.brighter());
+        }
 
-        JScrollPane scrollPane = new JScrollPane(statsTextArea);
-        scrollPane.setBorder(BorderFactory.createTitledBorder("📊 Tableau de bord - Statistiques"));
-        panel.add(scrollPane, BorderLayout.CENTER);
+        public void mouseExited(MouseEvent evt) {
+            loginButton.setBackground(verdeOliva);
+        }
+    });
 
-        updateStats();
-        return panel;
-    }
+    soldeHeaderLabel = new JLabel();
+    soldeHeaderLabel.setFont(new Font("Verdana", Font.BOLD, 16));
+    soldeHeaderLabel.setForeground(gialloOro);
+    updateSoldeHeader();
+
+    JPanel loginPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 0));
+    loginPanel.setOpaque(false);
+    loginPanel.add(soldeHeaderLabel);
+    loginPanel.add(Box.createHorizontalStrut(15));
+    loginPanel.add(loginButton);
+    header.add(loginPanel, BorderLayout.EAST);
+
+    // Main panel
+    cardLayout = new CardLayout();
+    mainPanel = new JPanel(cardLayout);
+    mainPanel.setBackground(biancoPanna);
+    mainPanel.setBorder(BorderFactory.createEmptyBorder(30, 40, 30, 40));
+
+    mainPanel.add(createHomePage(), "home");
+    mainPanel.add(createCommandePage(), "commande");
+    mainPanel.add(createStatsPage(), "stats");
+    mainPanel.add(createFichePage(), "fiche");
+
+    // Footer
+    JPanel footer = new JPanel();
+    footer.setBackground(rossoPomodoro);
+    footer.setLayout(new GridBagLayout());
+    footer.setBorder(BorderFactory.createEmptyBorder(15, 0, 15, 0));
+
+    JLabel footerLabel = new JLabel("<html><center><span style='color:#fcf5e5; font-size:12px; font-family:Verdana;'>"
+            + "Groupe E3_FI_1I – GHAZANFAR Aman, HAKIM Justine, SADDIK Amine, SAGAERT Auguste<br>"
+            + "© 2025 RaPizz | Via Roma, 123 | Napoli"
+            + "</span></center></html>");
+    footer.add(footerLabel);
+
+    // Assemble
+    frame.add(header, BorderLayout.NORTH);
+    frame.add(mainPanel, BorderLayout.CENTER);
+    frame.add(footer, BorderLayout.SOUTH);
+    frame.setVisible(true);
+}
+
+  private JPanel createStatsPage() {
+    JPanel panel = new JPanel(new BorderLayout());
+    panel.setBackground(new Color(252, 245, 229)); // biancoPanna
+
+    statsTextArea = new JTextArea();
+    statsTextArea.setEditable(false);
+    statsTextArea.setFont(new Font("Monospaced", Font.PLAIN, 14));
+    statsTextArea.setMargin(new Insets(15, 15, 15, 15));
+    statsTextArea.setBackground(Color.WHITE);
+    statsTextArea.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220)));
+
+    JScrollPane scrollPane = new JScrollPane(statsTextArea);
+    scrollPane.setBorder(BorderFactory.createTitledBorder("Tableau de bord - Statistiques"));
+    panel.add(scrollPane, BorderLayout.CENTER);
+
+    updateStats();
+    return panel;
+}
 
     private void updateStats() {
         StringBuilder sb = new StringBuilder();
         try {
             sb.append("📊 Statistiques globales RaPizz\n\n");
+            // Chiffre d'affaires total
+            var caTotal = serviceProvider.commandePizzaService.getChiffreAffairesTotal();
+            sb.append(String.format("Chiffre d'affaires total : %.2f €\n\n", caTotal));
 
             sb.append("🚗 Véhicules jamais utilisés:\n");
             var notUsedVehicles = serviceProvider.vehiculeService.getVehiculesJamaisServi();
@@ -328,13 +391,14 @@ public class App {
         sb.append("Total dépenses : ").append(connectedUser.getTotalDepenses()).append(" €\n");
     } catch (Exception e) {}
     // Fidélité
-    int reste = 5 - (connectedUser.getPizzasAchetees() % 5);
-    if (reste == 5) reste = 0;
-    if (reste == 0 && connectedUser.getPizzasAchetees() > 0) {
-        sb.append("🎉 Prochaine commande OFFERTE grâce à la fidélité !\n");
+    int reste = 10 - (connectedUser.getPizzasAchetees() % 10);
+    if (reste == 10 && connectedUser.getPizzasAchetees() > 0) {
+    // C’est la 10ᵉ, 20ᵉ, 30ᵉ… commande => pizza offerte
+        sb.append("🎉 Cette commande est OFFERTE grâce à votre fidélité !\n");
     } else {
         sb.append("Fidélité : encore ").append(reste).append(" commande(s) avant une pizza offerte.\n");
     }
+
     ficheTextArea.setText(sb.toString());
 }
     // --- End fiche page ---
@@ -537,7 +601,7 @@ public class App {
         statusLabel.setText("Votre pizza est en cours d'expédition...");
 
         Timer timer = new Timer(realTime * 200, ev -> {
-    boolean gratuiteRetard = retard > 10;
+    boolean gratuiteRetard = retard > 30;
     boolean gratuiteFinale = gratuiteRetard || gratuiteFidelite;
     StringBuilder sb = new StringBuilder();
     sb.append("<html>Votre pizza est arrivée !<br>");
@@ -547,7 +611,7 @@ public class App {
     sb.append("⏱️ Temps réel : ").append(realTime).append(" min<br>");
     sb.append("⏳ Retard : ").append(retard).append(" min<br>");
     if (gratuiteRetard) {
-        sb.append("<b style='color:green;'>Pizza OFFERTE (retard &gt; 10 min) !</b><br>");
+        sb.append("<b style='color:green;'>Pizza OFFERTE (retard &gt; 30 min) !</b><br>");
     } else if (gratuiteFidelite) {
         sb.append("<b style='color:orange;'>Pizza OFFERTE grâce à la fidélité !</b><br>");
     } else {
@@ -578,7 +642,7 @@ public class App {
         );
         serviceProvider.commandePizzaService.createCommandePizza(
             idLivraison, pizza.getId(), taille.getId(), 1, prix, gratuiteFinale,
-            gratuiteRetard ? "Retard > 10min" : (gratuiteFidelite ? "Fidélité" : null)
+            gratuiteRetard ? "Retard > 30min" : (gratuiteFidelite ? "Fidélité" : null)
         );
         // Met à jour le solde et stats client
         if (!gratuiteFinale) {
@@ -713,13 +777,25 @@ public class App {
         dialog.setVisible(true);
     }
 
-    private void updateSoldeHeader() {
-        if (connectedUser != null) {
-            loginButton.setText(connectedUser.getPrenom());
-            soldeHeaderLabel.setText(" | Solde : " + String.format("%.2f", connectedUser.getSolde()) + " €   ");
-        } else {
-            loginButton.setText("Se Connecter");
-            soldeHeaderLabel.setText("");
-        }
+   private void updateSoldeHeader() {
+    if (connectedUser != null) {
+        loginButton.setText(connectedUser.getPrenom());
+        loginButton.setFont(new Font("Arial", Font.BOLD, 14));
+        loginButton.setForeground(verdeOliva);
+        loginButton.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+
+        String soldeTexte = String.format(" | Solde : %.2f €   ", connectedUser.getSolde());
+        soldeHeaderLabel.setText(soldeTexte);
+        soldeHeaderLabel.setFont(new Font("Arial", Font.PLAIN, 14));
+        soldeHeaderLabel.setForeground(verdeOliva);
+    } else {
+        loginButton.setText("Se Connecter");
+        loginButton.setFont(new Font("Verdana", Font.BOLD, 20));
+        loginButton.setForeground(verdeOliva);
+        loginButton.setBorder(BorderFactory.createEmptyBorder(25, 10, 40, 10));
+
+        soldeHeaderLabel.setText("");
     }
+}
+
 }

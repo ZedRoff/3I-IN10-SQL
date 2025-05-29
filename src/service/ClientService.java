@@ -65,12 +65,20 @@ public Client getClient(String nom, String prenom) throws SQLException {
         ps.setString(2, prenom);
         try (ResultSet rs = ps.executeQuery()) {
             if (rs.next()) {
-                return new Client(rs.getString("nom"), rs.getString("prenom"));
+                return new Client(
+                    rs.getInt("id"),
+                    rs.getString("nom"),
+                    rs.getString("prenom"),
+                    rs.getDouble("solde"),
+                    rs.getInt("pizzas_achetees"),
+                    rs.getDouble("total_depenses")
+                );
             }
         }
     }
     return null;
 }
+
 public ClientCommandeStat getMeilleurClient() throws SQLException {
     String sql = """
         SELECT c.id, c.nom, c.prenom, COUNT(liv.id) AS nb_commandes
