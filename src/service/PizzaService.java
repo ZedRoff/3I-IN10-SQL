@@ -15,15 +15,19 @@ public class PizzaService {
     public PizzaService(Connection pConn) {
         this.conn = pConn;
     }
-    public PizzaStat getMeilleurePizza() throws SQLException {
+public PizzaStat getMeilleurePizza() throws SQLException {
     String sql = """
-        SELECT p.id, p.nom, COUNT(*) AS nb_commandes
+        SELECT 
+            p.id, 
+            p.nom, 
+            SUM(cp.quantite) AS nb_commandes
         FROM Pizza p
-        JOIN Commande_pizza c ON p.id = c.id_pizza
+        INNER JOIN Commande_pizza cp ON p.id = cp.id_pizza
         GROUP BY p.id, p.nom
         ORDER BY nb_commandes DESC
-        LIMIT 1;
+        LIMIT 1
     """;
+
     try (PreparedStatement ps = conn.prepareStatement(sql);
          ResultSet rs = ps.executeQuery()) {
         if (rs.next()) {
@@ -36,7 +40,6 @@ public class PizzaService {
         return null;
     }
 }
-
     // --- Add this method ---
     public List<Pizza> getAllPizzas() throws SQLException {
         List<Pizza> pizzas = new ArrayList<>();
