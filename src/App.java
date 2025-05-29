@@ -16,6 +16,7 @@ public class App {
     private ServiceProvider serviceProvider;
     private Client connectedUser;
     private JButton loginButton;
+    private JButton logoutButton;
     private JTextArea statsTextArea;
     private JTextArea ficheTextArea;
     private JLabel soldeHeaderLabel;
@@ -30,216 +31,234 @@ public class App {
         this.serviceProvider = serviceProvider;
     }
 
-public void showInterface() {
-    JFrame frame = new JFrame("RaPizz");
-    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
-    frame.setLayout(new BorderLayout());
+    public void showInterface() {
+        JFrame frame = new JFrame("RaPizz");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+        frame.setLayout(new BorderLayout());
 
-    // Fonts
-    Font titleFont = new Font("Verdana", Font.BOLD, 38);
-    Font buttonFont = new Font("Verdana", Font.BOLD, 16);
-    Font navFont = new Font("Verdana", Font.PLAIN, 18);
+        // Fonts
+        Font titleFont = new Font("Verdana", Font.BOLD, 38);
+        Font buttonFont = new Font("Verdana", Font.BOLD, 16);
+        Font navFont = new Font("Verdana", Font.PLAIN, 18);
 
-    // Header
-    JPanel header = new JPanel(new BorderLayout());
-    header.setBackground(rossoPomodoro);
-    header.setBorder(new EmptyBorder(15, 40, 15, 40));
-    header.setBorder(BorderFactory.createCompoundBorder(
-        BorderFactory.createMatteBorder(0, 0, 3, 0, verdeOliva),
-        new EmptyBorder(15, 40, 15, 40)
-    ));
-
-    // Titre RaPizz avec effet de survol
-    JLabel titleLabel = new JLabel("RaPizz");
-    titleLabel.setFont(titleFont);
-    titleLabel.setForeground(gialloOro);
-    titleLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-    titleLabel.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
-    titleLabel.addMouseListener(new MouseAdapter() {
-        @Override
-        public void mouseEntered(MouseEvent e) {
-            titleLabel.setForeground(Color.WHITE);
-        }
-        @Override
-        public void mouseExited(MouseEvent e) {
-            titleLabel.setForeground(gialloOro);
-        }
-    });
-
-    ImageIcon pizzaIcon = new ImageIcon(new ImageIcon("pizzeria.png").getImage().getScaledInstance(50, 50, Image.SCALE_SMOOTH));
-    JLabel iconLabel = new JLabel(pizzaIcon);
-
-    JPanel titlePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 0));
-    titlePanel.setOpaque(false);
-    titlePanel.add(iconLabel);
-    titlePanel.add(titleLabel);
-    header.add(titlePanel, BorderLayout.WEST);
-
-    // Nav Panel
-    JPanel navPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 40, 10));
-    navPanel.setOpaque(false);
-
-    String[] navTexts = {"Accueil", "Commander", "Statistiques", "Compte"};
-    String[] iconPaths = {"pizza.png", "order.png", "food.png", "profile.png"};
-    String[] cards = {"home", "commande", "stats", "fiche"};
-
-    // Création des labels de navigation
-    for (int i = 0; i < navTexts.length; i++) {
-        final String cardName = cards[i];
-        ImageIcon navIcon = new ImageIcon(new ImageIcon(iconPaths[i]).getImage().getScaledInstance(40, 40, Image.SCALE_SMOOTH));
-        JLabel navLabel = new JLabel(navTexts[i], navIcon, JLabel.CENTER);
-        navLabel.setFont(navFont);
-        navLabel.setForeground(biancoPanna);
-        navLabel.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createMatteBorder(0, 0, 3, 0, rossoPomodoro),
-            BorderFactory.createEmptyBorder(5, 15, 5, 15)
+        // Header
+        JPanel header = new JPanel(new BorderLayout());
+        header.setBackground(rossoPomodoro);
+        header.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createMatteBorder(0, 0, 3, 0, verdeOliva),
+            new EmptyBorder(15, 40, 15, 40)
         ));
-        navLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        navLabel.setHorizontalTextPosition(JLabel.RIGHT);
-        navLabel.setIconTextGap(12);
-        
-        navLabel.addMouseListener(new MouseAdapter() {
+
+        // Titre RaPizz avec effet de survol
+        JLabel titleLabel = new JLabel("RaPizz");
+        titleLabel.setFont(titleFont);
+        titleLabel.setForeground(gialloOro);
+        titleLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        titleLabel.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+        titleLabel.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
-                navLabel.setForeground(gialloOro);
-                navLabel.setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createMatteBorder(0, 0, 3, 0, gialloOro),
-                    BorderFactory.createEmptyBorder(5, 15, 5, 15)
-                ));
+                titleLabel.setForeground(Color.WHITE);
             }
-
             @Override
             public void mouseExited(MouseEvent e) {
-                navLabel.setForeground(biancoPanna);
-                navLabel.setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createMatteBorder(0, 0, 3, 0, rossoPomodoro),
-                    BorderFactory.createEmptyBorder(5, 15, 5, 15)
-                ));
+                titleLabel.setForeground(gialloOro);
             }
-
             @Override
             public void mouseClicked(MouseEvent e) {
-                cardLayout.show(mainPanel, cardName);
-                if ("stats".equals(cardName)) updateStats();
-                if ("fiche".equals(cardName)) updateFiche();
+                handleNavigation("home");
             }
         });
 
-        navPanel.add(navLabel);
+        ImageIcon pizzaIcon = new ImageIcon(new ImageIcon("pizzeria.png").getImage().getScaledInstance(50, 50, Image.SCALE_SMOOTH));
+        JLabel iconLabel = new JLabel(pizzaIcon);
+
+        JPanel titlePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 0));
+        titlePanel.setOpaque(false);
+        titlePanel.add(iconLabel);
+        titlePanel.add(titleLabel);
+        header.add(titlePanel, BorderLayout.WEST);
+
+        // Nav Panel
+        JPanel navPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 40, 10));
+        navPanel.setOpaque(false);
+
+        String[] navTexts = {"Accueil", "Commander", "Statistiques", "Compte"};
+        String[] iconPaths = {"pizza.png", "order.png", "food.png", "profile.png"};
+        String[] cards = {"home", "commande", "stats", "fiche"};
+
+        // Création des labels de navigation
+        for (int i = 0; i < navTexts.length; i++) {
+            final String cardName = cards[i];
+            ImageIcon navIcon = new ImageIcon(new ImageIcon(iconPaths[i]).getImage().getScaledInstance(40, 40, Image.SCALE_SMOOTH));
+            JLabel navLabel = new JLabel(navTexts[i], navIcon, JLabel.CENTER);
+            navLabel.setFont(navFont);
+            navLabel.setForeground(biancoPanna);
+            navLabel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(0, 0, 3, 0, rossoPomodoro),
+                BorderFactory.createEmptyBorder(5, 15, 5, 15)
+            ));
+            navLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            navLabel.setHorizontalTextPosition(JLabel.RIGHT);
+            navLabel.setIconTextGap(12);
+            
+            navLabel.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                    navLabel.setForeground(gialloOro);
+                    navLabel.setBorder(BorderFactory.createCompoundBorder(
+                        BorderFactory.createMatteBorder(0, 0, 3, 0, gialloOro),
+                        BorderFactory.createEmptyBorder(5, 15, 5, 15)
+                    ));
+                }
+
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    navLabel.setForeground(biancoPanna);
+                    navLabel.setBorder(BorderFactory.createCompoundBorder(
+                        BorderFactory.createMatteBorder(0, 0, 3, 0, rossoPomodoro),
+                        BorderFactory.createEmptyBorder(5, 15, 5, 15)
+                    ));
+                }
+
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    handleNavigation(cardName);
+                }
+            });
+
+            navPanel.add(navLabel);
+        }
+
+        header.add(navPanel, BorderLayout.CENTER);
+
+        // Login Panel
+        JPanel loginPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 0));
+        loginPanel.setOpaque(false);
+        
+        soldeHeaderLabel = new JLabel();
+        soldeHeaderLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        loginPanel.add(soldeHeaderLabel);
+        
+        loginButton = new JButton("Se Connecter");
+        loginButton.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        loginButton.setBackground(biancoPanna);
+        loginButton.setForeground(Color.BLACK);
+        loginButton.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(verdeOliva, 2),
+            BorderFactory.createEmptyBorder(8, 25, 8, 25)
+        ));
+        loginButton.setFocusPainted(false);
+        loginButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        loginButton.addActionListener(e -> showLoginDialog(frame));
+
+        // Ajout du bouton de déconnexion
+        logoutButton = new JButton();
+        ImageIcon decoIcon = new ImageIcon(new ImageIcon("sortir.png").getImage().getScaledInstance(30, 30, Image.SCALE_SMOOTH));
+        logoutButton.setIcon(decoIcon);
+        logoutButton.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        logoutButton.setBackground(rossoPomodoro);
+        logoutButton.setForeground(Color.BLACK);
+        logoutButton.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(rossoPomodoro.darker(), 2),
+            BorderFactory.createEmptyBorder(8, 12, 8, 12)
+        ));
+        logoutButton.setFocusPainted(false);
+        logoutButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        logoutButton.setToolTipText("Se déconnecter");
+        logoutButton.addActionListener(e -> handleLogout());
+        logoutButton.setVisible(false);
+
+        loginPanel.add(Box.createHorizontalStrut(15));
+        loginPanel.add(loginButton);
+        header.add(loginPanel, BorderLayout.EAST);
+
+        // Main panel
+        cardLayout = new CardLayout();
+        mainPanel = new JPanel(cardLayout);
+        mainPanel.setBackground(biancoPanna);
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(30, 40, 30, 40));
+
+        mainPanel.add(createHomePage(), "home");
+        mainPanel.add(createCommandePage(), "commande");
+        mainPanel.add(createStatsPage(), "stats");
+        mainPanel.add(createFichePage(), "fiche");
+
+        // Footer amélioré
+        JPanel footer = new JPanel();
+        footer.setBackground(rossoPomodoro);
+        footer.setLayout(new GridBagLayout());
+        footer.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createMatteBorder(3, 0, 0, 0, verdeOliva),
+            BorderFactory.createEmptyBorder(20, 0, 20, 0)
+        ));
+
+        JLabel footerLabel = new JLabel("<html><center><span style='color:#fcf5e5; font-size:12px; font-family:Verdana;'>"
+                + "Groupe E3_FI_1I – GHAZANFAR Aman, HAKIM Justine, SADDIK Amine, SAGAERT Auguste<br>"
+                + "<span style='color:" + String.format("#%02x%02x%02x", gialloOro.getRed(), gialloOro.getGreen(), gialloOro.getBlue()) + ";'>"
+                + "© 2025 RaPizz | Via Roma, 123 | Napoli"
+                + "</span></center></html>");
+        footer.add(footerLabel);
+
+        // Assemble
+        frame.add(header, BorderLayout.NORTH);
+        frame.add(mainPanel, BorderLayout.CENTER);
+        frame.add(footer, BorderLayout.SOUTH);
+        frame.setVisible(true);
     }
 
-    header.add(navPanel, BorderLayout.CENTER);
+    private JPanel createStatsPage() {
+        JPanel panel = new JPanel(new BorderLayout(20, 20));
+        panel.setBackground(biancoPanna);
+        panel.setBorder(new EmptyBorder(30, 40, 30, 40));
 
-    // Login Panel
-    JPanel loginPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 0));
-    loginPanel.setOpaque(false);
-    
-    soldeHeaderLabel = new JLabel();
-    soldeHeaderLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
-    loginPanel.add(soldeHeaderLabel);
-    
-    loginButton = new JButton("Se Connecter");
-    loginButton.setFont(new Font("Segoe UI", Font.BOLD, 16));
-    loginButton.setBackground(biancoPanna);
-    loginButton.setForeground(Color.BLACK);
-    loginButton.setBorder(BorderFactory.createCompoundBorder(
-        BorderFactory.createLineBorder(verdeOliva, 2),
-        BorderFactory.createEmptyBorder(8, 25, 8, 25)
-    ));
-    loginButton.setFocusPainted(false);
-    loginButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-    loginButton.addActionListener(e -> showLoginDialog(frame));
-    
-    loginPanel.add(Box.createHorizontalStrut(15));
-    loginPanel.add(loginButton);
-    header.add(loginPanel, BorderLayout.EAST);
+        // En-tête des statistiques
+        JLabel headerLabel = new JLabel("📊 Tableau de Bord RaPizz", JLabel.CENTER);
+        headerLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        headerLabel.setForeground(rossoPomodoro);
+        headerLabel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createMatteBorder(0, 0, 3, 0, verdeOliva),
+            BorderFactory.createEmptyBorder(0, 0, 15, 0)
+        ));
+        panel.add(headerLabel, BorderLayout.NORTH);
 
-    // Main panel
-    cardLayout = new CardLayout();
-    mainPanel = new JPanel(cardLayout);
-    mainPanel.setBackground(biancoPanna);
-    mainPanel.setBorder(BorderFactory.createEmptyBorder(30, 40, 30, 40));
+        // Zone de texte des statistiques avec style amélioré
+        statsTextArea = new JTextArea();
+        statsTextArea.setEditable(false);
+        statsTextArea.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        statsTextArea.setMargin(new Insets(20, 20, 20, 20));
+        statsTextArea.setBackground(Color.WHITE);
+        statsTextArea.setLineWrap(true);
+        statsTextArea.setWrapStyleWord(true);
 
-    mainPanel.add(createHomePage(), "home");
-    mainPanel.add(createCommandePage(), "commande");
-    mainPanel.add(createStatsPage(), "stats");
-    mainPanel.add(createFichePage(), "fiche");
+        JScrollPane scrollPane = new JScrollPane(statsTextArea);
+        scrollPane.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(verdeOliva, 2),
+            BorderFactory.createEmptyBorder(5, 5, 5, 5)
+        ));
 
-    // Footer amélioré
-    JPanel footer = new JPanel();
-    footer.setBackground(rossoPomodoro);
-    footer.setLayout(new GridBagLayout());
-    footer.setBorder(BorderFactory.createCompoundBorder(
-        BorderFactory.createMatteBorder(3, 0, 0, 0, verdeOliva),
-        BorderFactory.createEmptyBorder(20, 0, 20, 0)
-    ));
+        // Personnalisation simple de la scrollbar
+        scrollPane.getVerticalScrollBar().setBackground(biancoPanna);
+        scrollPane.getVerticalScrollBar().setForeground(verdeOliva);
+        UIManager.put("ScrollBar.thumb", new ColorUIResource(verdeOliva));
+        UIManager.put("ScrollBar.track", new ColorUIResource(biancoPanna));
 
-    JLabel footerLabel = new JLabel("<html><center><span style='color:#fcf5e5; font-size:12px; font-family:Verdana;'>"
-            + "Groupe E3_FI_1I – GHAZANFAR Aman, HAKIM Justine, SADDIK Amine, SAGAERT Auguste<br>"
-            + "<span style='color:" + String.format("#%02x%02x%02x", gialloOro.getRed(), gialloOro.getGreen(), gialloOro.getBlue()) + ";'>"
-            + "© 2025 RaPizz | Via Roma, 123 | Napoli"
-            + "</span></center></html>");
-    footer.add(footerLabel);
+        panel.add(scrollPane, BorderLayout.CENTER);
 
-    // Assemble
-    frame.add(header, BorderLayout.NORTH);
-    frame.add(mainPanel, BorderLayout.CENTER);
-    frame.add(footer, BorderLayout.SOUTH);
-    frame.setVisible(true);
-}
+        // Bouton de rafraîchissement
+        JButton refreshButton = new JButton("🔄 Actualiser les statistiques");
+        styleButton(refreshButton, verdeOliva);
+        refreshButton.addActionListener(e -> updateStats());
 
-  private JPanel createStatsPage() {
-    JPanel panel = new JPanel(new BorderLayout(20, 20));
-    panel.setBackground(biancoPanna);
-    panel.setBorder(new EmptyBorder(30, 40, 30, 40));
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        buttonPanel.setOpaque(false);
+        buttonPanel.add(refreshButton);
+        panel.add(buttonPanel, BorderLayout.SOUTH);
 
-    // En-tête des statistiques
-    JLabel headerLabel = new JLabel("📊 Tableau de Bord RaPizz", JLabel.CENTER);
-    headerLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
-    headerLabel.setForeground(rossoPomodoro);
-    headerLabel.setBorder(BorderFactory.createCompoundBorder(
-        BorderFactory.createMatteBorder(0, 0, 3, 0, verdeOliva),
-        BorderFactory.createEmptyBorder(0, 0, 15, 0)
-    ));
-    panel.add(headerLabel, BorderLayout.NORTH);
-
-    // Zone de texte des statistiques avec style amélioré
-    statsTextArea = new JTextArea();
-    statsTextArea.setEditable(false);
-    statsTextArea.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-    statsTextArea.setMargin(new Insets(20, 20, 20, 20));
-    statsTextArea.setBackground(Color.WHITE);
-    statsTextArea.setLineWrap(true);
-    statsTextArea.setWrapStyleWord(true);
-
-    JScrollPane scrollPane = new JScrollPane(statsTextArea);
-    scrollPane.setBorder(BorderFactory.createCompoundBorder(
-        BorderFactory.createLineBorder(verdeOliva, 2),
-        BorderFactory.createEmptyBorder(5, 5, 5, 5)
-    ));
-
-    // Personnalisation simple de la scrollbar
-    scrollPane.getVerticalScrollBar().setBackground(biancoPanna);
-    scrollPane.getVerticalScrollBar().setForeground(verdeOliva);
-    UIManager.put("ScrollBar.thumb", new ColorUIResource(verdeOliva));
-    UIManager.put("ScrollBar.track", new ColorUIResource(biancoPanna));
-
-    panel.add(scrollPane, BorderLayout.CENTER);
-
-    // Bouton de rafraîchissement
-    JButton refreshButton = new JButton("🔄 Actualiser les statistiques");
-    styleButton(refreshButton, verdeOliva);
-    refreshButton.addActionListener(e -> updateStats());
-
-    JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-    buttonPanel.setOpaque(false);
-    buttonPanel.add(refreshButton);
-    panel.add(buttonPanel, BorderLayout.SOUTH);
-
-    updateStats();
-    return panel;
-}
+        updateStats();
+        return panel;
+    }
 
     private void updateStats() {
         StringBuilder sb = new StringBuilder();
@@ -310,9 +329,7 @@ public void showInterface() {
             }
             @Override
             public void mouseClicked(MouseEvent e) {
-                cardLayout.show(mainPanel, cardName);
-                if ("stats".equals(cardName)) updateStats();
-                if ("fiche".equals(cardName)) updateFiche();
+                handleNavigation(cardName);
             }
         });
         return label;
@@ -322,9 +339,7 @@ public void showInterface() {
         return new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                cardLayout.show(mainPanel, cardName);
-                if ("stats".equals(cardName)) updateStats();
-                if ("fiche".equals(cardName)) updateFiche();
+                handleNavigation(cardName);
             }
         };
     }
@@ -407,7 +422,7 @@ public void showInterface() {
         // Bouton Commander
         JButton orderButton = new JButton("🛵 Commander maintenant");
         styleMenuButton(orderButton, rossoPomodoro);
-        orderButton.addActionListener(e -> cardLayout.show(mainPanel, "commande"));
+        orderButton.addActionListener(e -> handleNavigation("commande"));
 
         // Bouton Démo
         JButton demoButton = new JButton("🎬 Voir la démo");
@@ -478,14 +493,38 @@ public void showInterface() {
         panel.setBorder(new EmptyBorder(30, 40, 30, 40));
 
         // En-tête du profil
-        JLabel headerLabel = new JLabel("👤 Profil Client", JLabel.CENTER);
-        headerLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
-        headerLabel.setForeground(rossoPomodoro);
-        headerLabel.setBorder(BorderFactory.createCompoundBorder(
+        JPanel headerPanel = new JPanel(new BorderLayout(15, 0));
+        headerPanel.setOpaque(false);
+        headerPanel.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createMatteBorder(0, 0, 3, 0, verdeOliva),
             BorderFactory.createEmptyBorder(0, 0, 15, 0)
         ));
-        panel.add(headerLabel, BorderLayout.NORTH);
+
+        JLabel headerLabel = new JLabel("👤 Profil Client", JLabel.LEFT);
+        headerLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        headerLabel.setForeground(rossoPomodoro);
+        headerPanel.add(headerLabel, BorderLayout.WEST);
+
+        // Bouton de déconnexion dans l'en-tête de la page
+        logoutButton = new JButton("Se déconnecter");
+        logoutButton.setIcon(new ImageIcon(new ImageIcon("sortir.png").getImage().getScaledInstance(20, 20, Image.SCALE_SMOOTH)));
+        logoutButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        logoutButton.setBackground(rossoPomodoro);
+        logoutButton.setForeground(Color.BLACK);
+        logoutButton.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(rossoPomodoro.darker(), 2),
+            BorderFactory.createEmptyBorder(8, 15, 8, 15)
+        ));
+        logoutButton.setFocusPainted(false);
+        logoutButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        logoutButton.addActionListener(e -> handleLogout());
+        
+        JPanel logoutPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        logoutPanel.setOpaque(false);
+        logoutPanel.add(logoutButton);
+        headerPanel.add(logoutPanel, BorderLayout.EAST);
+        
+        panel.add(headerPanel, BorderLayout.NORTH);
 
         // Zone principale avec la fiche client
         ficheTextArea = new JTextArea();
@@ -521,7 +560,7 @@ public void showInterface() {
         // Bouton Commander
         JButton orderButton = new JButton("🛵 Commander une pizza");
         styleButton(orderButton, rossoPomodoro);
-        orderButton.addActionListener(e -> cardLayout.show(mainPanel, "commande"));
+        orderButton.addActionListener(e -> handleNavigation("commande"));
 
         actionsPanel.add(add10Button);
         actionsPanel.add(orderButton);
@@ -539,35 +578,35 @@ public void showInterface() {
     }
 
     private void updateFiche() {
-    if (ficheTextArea == null) return;
-    if (connectedUser == null) {
-        ficheTextArea.setText("Aucun utilisateur connecté.");
-        return;
-    }
-    StringBuilder sb = new StringBuilder();
-    sb.append("Informations du client connecté :\n\n");
-    sb.append("Nom : ").append(connectedUser.getNom()).append("\n");
-    sb.append("Prénom : ").append(connectedUser.getPrenom()).append("\n");
-    try {
-        sb.append("Solde : ").append(connectedUser.getSolde()).append(" €\n");
-    } catch (Exception e) {}
-    try {
-        sb.append("Pizzas achetées : ").append(connectedUser.getPizzasAchetees()).append("\n");
-    } catch (Exception e) {}
-    try {
-        sb.append("Total dépenses : ").append(connectedUser.getTotalDepenses()).append(" €\n");
-    } catch (Exception e) {}
-    // Fidélité
-    int reste = 10 - (connectedUser.getPizzasAchetees() % 10);
-    if (reste == 10 && connectedUser.getPizzasAchetees() > 0) {
-    // C'est la 10e, 20e, 30e... commande => pizza offerte
-        sb.append("🎉 Cette commande est OFFERTE grâce à votre fidélité !\n");
-    } else {
-        sb.append("Fidélité : encore ").append(reste).append(" commande(s) avant une pizza offerte.\n");
-    }
+        if (ficheTextArea == null) return;
+        if (connectedUser == null) {
+            ficheTextArea.setText("Aucun utilisateur connecté.");
+            return;
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append("Informations du client connecté :\n\n");
+        sb.append("Nom : ").append(connectedUser.getNom()).append("\n");
+        sb.append("Prénom : ").append(connectedUser.getPrenom()).append("\n");
+        try {
+            sb.append("Solde : ").append(connectedUser.getSolde()).append(" €\n");
+        } catch (Exception e) {}
+        try {
+            sb.append("Pizzas achetées : ").append(connectedUser.getPizzasAchetees()).append("\n");
+        } catch (Exception e) {}
+        try {
+            sb.append("Total dépenses : ").append(connectedUser.getTotalDepenses()).append(" €\n");
+        } catch (Exception e) {}
+        // Fidélité
+        int reste = 10 - (connectedUser.getPizzasAchetees() % 10);
+        if (reste == 10 && connectedUser.getPizzasAchetees() > 0) {
+        // C'est la 10e, 20e, 30e... commande => pizza offerte
+            sb.append("🎉 Cette commande est OFFERTE grâce à votre fidélité !\n");
+        } else {
+            sb.append("Fidélité : encore ").append(reste).append(" commande(s) avant une pizza offerte.\n");
+        }
 
-    ficheTextArea.setText(sb.toString());
-}
+        ficheTextArea.setText(sb.toString());
+    }
     // --- End fiche page ---
 
     // --- Commande page implementation ---
@@ -857,36 +896,28 @@ public void showInterface() {
                                 "Erreur création utilisateur.",
                                 "Erreur", JOptionPane.ERROR_MESSAGE);
                             return;
-                        } else {
-                            JOptionPane.showMessageDialog(dialog,
-                                "Compte créé et connecté.\nBienvenue " + prenom + " !",
-                                "Succès", JOptionPane.INFORMATION_MESSAGE);
                         }
+                        JOptionPane.showMessageDialog(dialog,
+                            "Compte créé et connecté.\nBienvenue " + prenom + " !",
+                            "Succès", JOptionPane.INFORMATION_MESSAGE);
                     } else {
                         JOptionPane.showMessageDialog(dialog,
                             "Connexion réussie.\nBienvenue " + prenom + " !",
                             "Succès", JOptionPane.INFORMATION_MESSAGE);
                     }
                     connectedUser = client;
-
-                    // Met à jour bouton
-                    loginButton.setText(prenom);
-                    loginButton.setEnabled(false);
-
-                    updateFiche();
                     updateSoldeHeader();
-
+                    updateFiche();
                     dialog.dispose();
-
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(dialog,
-                            "Erreur lors de la connexion : " + ex.getMessage(),
-                            "Erreur", JOptionPane.ERROR_MESSAGE);
+                        "Erreur lors de la connexion : " + ex.getMessage(),
+                        "Erreur", JOptionPane.ERROR_MESSAGE);
                 }
             } else {
                 JOptionPane.showMessageDialog(dialog,
-                        "Veuillez remplir tous les champs.",
-                        "Attention", JOptionPane.WARNING_MESSAGE);
+                    "Veuillez remplir tous les champs.",
+                    "Attention", JOptionPane.WARNING_MESSAGE);
             }
         });
 
@@ -902,15 +933,13 @@ public void showInterface() {
         dialog.setVisible(true);
     }
 
-   private void updateSoldeHeader() {
+    private void updateSoldeHeader() {
         if (connectedUser != null) {
-            // Affichage du solde
             String soldeTexte = String.format("Solde : %.2f €", connectedUser.getSolde());
             soldeHeaderLabel.setText(soldeTexte);
             soldeHeaderLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
             soldeHeaderLabel.setForeground(verdeOliva);
 
-            // Mise à jour du bouton de connexion
             loginButton.setText(connectedUser.getPrenom());
             loginButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
             loginButton.setForeground(Color.WHITE);
@@ -931,7 +960,43 @@ public void showInterface() {
                 BorderFactory.createEmptyBorder(8, 25, 8, 25)
             ));
             loginButton.setEnabled(true);
+            cardLayout.show(mainPanel, "home");
         }
     }
 
+    private void handleLogout() {
+        int choice = JOptionPane.showConfirmDialog(
+            null,
+            "Voulez-vous vraiment vous déconnecter ?",
+            "Confirmation de déconnexion",
+            JOptionPane.YES_NO_OPTION,
+            JOptionPane.QUESTION_MESSAGE
+        );
+
+        if (choice == JOptionPane.YES_OPTION) {
+            connectedUser = null;
+            updateSoldeHeader();
+            updateFiche();
+            cardLayout.show(mainPanel, "home");
+            logoutButton.setVisible(false);
+        }
+    }
+
+    private void handleNavigation(String cardName) {
+        if ((cardName.equals("fiche") || cardName.equals("commande")) && connectedUser == null) {
+            JOptionPane.showMessageDialog(null,
+                "Veuillez vous connecter pour accéder à cette section.",
+                "Connexion requise",
+                JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        
+        cardLayout.show(mainPanel, cardName);
+        
+        if ("stats".equals(cardName)) {
+            updateStats();
+        } else if ("fiche".equals(cardName)) {
+            updateFiche();
+        }
+    }
 }
