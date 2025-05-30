@@ -829,7 +829,7 @@ public class App {
 
             // Vérification fidélité et solde
             int commandesAvant = connectedUser.getPizzasAchetees();
-            boolean gratuiteFidelite = ((commandesAvant + 1) % 5 == 0);
+            boolean gratuiteFidelite = ((commandesAvant + 1) % 10 == 0);
             boolean gratuite = gratuiteFidelite;
 
             if (!gratuite && connectedUser.getSolde() < prix) {
