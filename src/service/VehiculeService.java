@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import src.model.Vehicule;
+import src.model.VehiculeStat;
 
 public class VehiculeService {
     private final Connection conn;
@@ -56,6 +57,30 @@ public class VehiculeService {
                 ));
             }
             return vehicules;
+        }
+    }
+
+    public VehiculeStat getVehiculeLePlusUtilise() throws SQLException {
+        String sql = """
+            SELECT v.id, v.type, v.immatriculation, COUNT(l.id) as nb_utilisations
+            FROM Vehicule v
+            JOIN Livraison l ON v.id = l.id_vehicule
+            GROUP BY v.id, v.type, v.immatriculation
+            ORDER BY nb_utilisations DESC
+            LIMIT 1
+        """;
+
+        try (PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return new VehiculeStat(
+                    rs.getInt("id"),
+                    rs.getString("type"),
+                    rs.getString("immatriculation"),
+                    rs.getInt("nb_utilisations")
+                );
+            }
+            return null;
         }
     }
 }

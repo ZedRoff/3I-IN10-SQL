@@ -7,6 +7,7 @@ import java.util.List;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.plaf.ColorUIResource;
+import javax.swing.text.html.HTMLEditorKit;
 import src.Provider.ServiceProvider;
 import src.model.Client;
 
@@ -18,7 +19,7 @@ public class App {
     private JButton loginButton;
     private JButton logoutButton;
     private JTextArea statsTextArea;
-    private JTextArea ficheTextArea;
+    private JEditorPane ficheTextArea;
     private JLabel soldeHeaderLabel;
     // Couleurs italiennes
     Color rossoPomodoro = new Color(205, 35, 35);    // Rouge tomate plus vif
@@ -276,68 +277,127 @@ public class App {
             var caTotal = serviceProvider.commandePizzaService.getChiffreAffairesTotal();
             sb.append(String.format("Chiffre d'affaires total : %.2f €\n\n", caTotal));
 
-            sb.append("🚗 Véhicules jamais utilisés:\n");
+            // Véhicules
+            sb.append("🚗 Statistiques véhicules:\n");
             var notUsedVehicles = serviceProvider.vehiculeService.getVehiculesJamaisServi();
             if (notUsedVehicles.isEmpty()) {
-                sb.append("  Tous les véhicules ont déjà été utilisés\n");
+                sb.append("  ✓ Tous les véhicules ont déjà été utilisés\n");
             } else {
+                sb.append("  ⚠️ Véhicules jamais utilisés:\n");
                 for (var v : notUsedVehicles) {
-                    sb.append("  - ").append(v.type).append(" (").append(v.immatriculation).append(")\n");
+                    sb.append("    - ").append(v.type).append(" (").append(v.immatriculation).append(")\n");
                 }
+            }
+            
+            var bestVehicle = serviceProvider.vehiculeService.getVehiculeLePlusUtilise();
+            if (bestVehicle != null) {
+                sb.append("  🏆 Véhicule le plus utilisé: ")
+                  .append(bestVehicle.getType())
+                  .append(" (").append(bestVehicle.getImmatriculation()).append(") - ")
+                  .append(bestVehicle.getNbUtilisations())
+                  .append(" livraison").append(bestVehicle.getNbUtilisations() > 1 ? "s" : "")
+                  .append("\n");
             }
             sb.append("\n");
 
-            sb.append("👤 Nombre de commandes par client:\n");
+            // Livreurs
+            sb.append("👤 Statistiques livreurs:\n");
+            var worstDriver = serviceProvider.livreurService.getPireLivreur();
+            if (worstDriver == null || worstDriver.getNbRetards() == 0) {
+                sb.append("  ✓ Aucun retard enregistré\n");
+            } else {
+                sb.append("  ⚠️ Livreur avec le plus de retards: ")
+                  .append(worstDriver.getNom())
+                  .append("\n    - ").append(worstDriver.getNbRetards())
+                  .append(" retard").append(worstDriver.getNbRetards() > 1 ? "s" : "")
+                  .append(" (total: ").append(worstDriver.getTotalRetardMinutes())
+                  .append(" minute").append(worstDriver.getTotalRetardMinutes() > 1 ? "s" : "")
+                  .append(")\n");
+            }
+            sb.append("\n");
+
+            // Clients
+            sb.append("👥 Statistiques clients:\n");
             var clientStats = serviceProvider.clientService.getNombreCommandesParClient();
             if (clientStats.isEmpty()) {
-                sb.append("  Aucune commande enregistrée\n");
+                sb.append("  Aucun client enregistré\n");
             } else {
+                // Calcul des statistiques
+                int totalClients = clientStats.size();
+                int clientsAvecCommandes = 0;
+                int totalCommandes = 0;
+                
                 for (var stat : clientStats) {
-                    String nbCommandes = stat.getNbCommandes() == 0 ? "Aucune commande" : stat.getNbCommandes() + " commande" + (stat.getNbCommandes() > 1 ? "s" : "");
-                    sb.append(String.format("  - %s %s: %s\n", stat.getPrenom(), stat.getNom(), nbCommandes));
+                    if (stat.getNbCommandes() > 0) {
+                        clientsAvecCommandes++;
+                        totalCommandes += stat.getNbCommandes();
+                    }
+                }
+
+                // En-tête avec résumé
+                sb.append(String.format("  📊 Résumé:\n"));
+                sb.append(String.format("  • Nombre total de clients: %d\n", totalClients));
+                sb.append(String.format("  • Clients ayant commandé: %d (%.1f%%)\n", 
+                    clientsAvecCommandes,
+                    totalClients > 0 ? (clientsAvecCommandes * 100.0 / totalClients) : 0));
+                sb.append(String.format("  • Total des commandes: %d\n\n", totalCommandes));
+
+                // Détail par client
+                sb.append("  📋 Détail des commandes par client:\n");
+                for (var stat : clientStats) {
+                    String nbCommandes = stat.getNbCommandes() == 0 ? "Aucune commande" : 
+                        stat.getNbCommandes() + " commande" + (stat.getNbCommandes() > 1 ? "s" : "");
+                    sb.append(String.format("  - %s %s: %s\n", 
+                        stat.getPrenom(), 
+                        stat.getNom(), 
+                        nbCommandes));
                 }
             }
             sb.append("\n");
 
+            // Moyenne des commandes par client
             double avg = serviceProvider.clientService.getMoyenneCommandesParClient();
             if (avg == 0) {
-                sb.append("📈 Moyenne des commandes : Aucune commande enregistrée\n\n");
+                sb.append("📈 Moyenne des commandes :\n");
+                sb.append("  Aucune commande enregistrée\n\n");
             } else {
                 String moyenneFormatted = String.format("%.1f", avg);
-                sb.append(String.format("📈 Moyenne des commandes : %s commande%s par client\n\n", 
+                sb.append("📈 Moyenne des commandes :\n");
+                sb.append(String.format("  %s commande%s par client en moyenne\n", 
                     moyenneFormatted,
                     avg > 1 ? "s" : ""));
+
+                // Ajout de la répartition
+                var clientStats2 = serviceProvider.clientService.getClientsAuDessusDeLaMoyenne();
+                int clientsAuDessus = clientStats2.size();
+                int totalClients = clientStats.size();
+                int clientsEnDessous = totalClients - clientsAuDessus;
+
+                sb.append(String.format("  • %d client%s au-dessus de la moyenne\n", 
+                    clientsAuDessus,
+                    clientsAuDessus > 1 ? "s" : ""));
+                sb.append(String.format("  • %d client%s en-dessous de la moyenne\n", 
+                    clientsEnDessous,
+                    clientsEnDessous > 1 ? "s" : ""));
+                sb.append("  (calculée sur l'ensemble des clients)\n\n");
             }
 
+            // Meilleur client
             var meilleurClient = serviceProvider.clientService.getMeilleurClient();
-            sb.append("🥇 Meilleur client:\n");
+            sb.append("🏆 Client le plus fidèle : ");
             if (meilleurClient == null || meilleurClient.getNbCommandes() == 0) {
-                sb.append("  Aucun client n'a encore commandé\n\n");
+                sb.append("Aucune commande enregistrée\n\n");
             } else {
-                sb.append(String.format("  %s %s (%d commande%s)\n\n", 
+                sb.append(String.format("%s %s (%d commande%s)\n\n", 
                     meilleurClient.getPrenom(), 
-                    meilleurClient.getNom(), 
+                    meilleurClient.getNom(),
                     meilleurClient.getNbCommandes(),
                     meilleurClient.getNbCommandes() > 1 ? "s" : ""));
             }
 
-            var clientsAbove = serviceProvider.clientService.getClientsAuDessusDeLaMoyenne();
-            sb.append("📈 Clients au-dessus de la moyenne:\n");
-            if (clientsAbove.isEmpty()) {
-                sb.append("  Aucun client au-dessus de la moyenne\n");
-            } else {
-                for (var c : clientsAbove) {
-                    sb.append(String.format("  - %s %s: %d commande%s\n", 
-                        c.getPrenom(), 
-                        c.getNom(), 
-                        c.getNbCommandes(),
-                        c.getNbCommandes() > 1 ? "s" : ""));
-                }
-            }
-            sb.append("\n");
-
+            // Meilleure pizza
             var bestPizza = serviceProvider.pizzaService.getMeilleurePizza();
-            sb.append("🍕 Pizza la plus commandée: ");
+            sb.append("🍕 Pizza la plus commandée : ");
             if (bestPizza == null || bestPizza.getNbCommandes() == 0) {
                 sb.append("Aucune pizza n'a encore été commandée\n\n");
             } else {
@@ -347,28 +407,16 @@ public class App {
                     bestPizza.getNbCommandes() > 1 ? "s" : ""));
             }
 
+            // Meilleur ingrédient
             var bestIngredient = serviceProvider.ingredientService.getMeilleurIngredient();
-            sb.append("🧄 Ingrédient le plus utilisé: ");
+            sb.append("🧄 Ingrédient le plus utilisé : ");
             if (bestIngredient == null || bestIngredient.getNbUtilisation() == 0) {
-                sb.append("Aucun ingrédient n'a encore été utilisé\n\n");
+                sb.append("Aucun ingrédient n'a encore été utilisé\n");
             } else {
-                sb.append(String.format("%s (%d utilisation%s)\n\n", 
+                sb.append(String.format("%s (%d utilisation%s)\n", 
                     bestIngredient.getNom(), 
                     bestIngredient.getNbUtilisation(),
                     bestIngredient.getNbUtilisation() > 1 ? "s" : ""));
-            }
-
-            var worst = serviceProvider.livreurService.getPireLivreur();
-            sb.append("🚴‍♂️ Pire livreur:\n");
-            if (worst == null || worst.getNbRetards() == 0) {
-                sb.append("  Aucun retard enregistré\n");
-            } else {
-                sb.append(String.format("  %s (%d retard%s, %d minute%s)\n", 
-                    worst.getNom(), 
-                    worst.getNbRetards(),
-                    worst.getNbRetards() > 1 ? "s" : "",
-                    worst.getTotalRetardMinutes(),
-                    worst.getTotalRetardMinutes() > 1 ? "s" : ""));
             }
 
             statsTextArea.setText(sb.toString());
@@ -595,19 +643,19 @@ public class App {
         panel.add(headerPanel, BorderLayout.NORTH);
 
         // Zone principale avec la fiche client
-        ficheTextArea = new JTextArea();
-        ficheTextArea.setEditable(false);
-        ficheTextArea.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-        ficheTextArea.setMargin(new Insets(20, 20, 20, 20));
-        ficheTextArea.setBackground(Color.WHITE);
-        ficheTextArea.setLineWrap(true);
-        ficheTextArea.setWrapStyleWord(true);
+        JEditorPane fichePane = new JEditorPane();
+        fichePane.setEditorKit(new javax.swing.text.html.HTMLEditorKit());
+        fichePane.setEditable(false);
+        fichePane.setBackground(Color.WHITE);
+        fichePane.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, Boolean.TRUE);
+        fichePane.setFont(new Font("Segoe UI", Font.PLAIN, 16));
 
-        JScrollPane scrollPane = new JScrollPane(ficheTextArea);
+        JScrollPane scrollPane = new JScrollPane(fichePane);
         scrollPane.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(verdeOliva, 2),
             BorderFactory.createEmptyBorder(5, 5, 5, 5)
         ));
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
 
         // Panneau des actions
         JPanel actionsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
@@ -641,6 +689,9 @@ public class App {
 
         panel.add(mainContent, BorderLayout.CENTER);
 
+        // Remplacer la référence au JTextArea par le JEditorPane
+        ficheTextArea = fichePane;
+
         updateFiche();
         return panel;
     }
@@ -651,29 +702,52 @@ public class App {
             ficheTextArea.setText("Aucun utilisateur connecté.");
             return;
         }
+
         StringBuilder sb = new StringBuilder();
-        sb.append("Informations du client connecté :\n\n");
-        sb.append("Nom : ").append(connectedUser.getNom()).append("\n");
-        sb.append("Prénom : ").append(connectedUser.getPrenom()).append("\n");
-        try {
-            sb.append("Solde : ").append(String.format("%.2f", connectedUser.getSolde())).append(" €\n");
-        } catch (Exception e) {}
-        try {
-            sb.append("Pizzas achetées : ").append(connectedUser.getPizzasAchetees()).append("\n");
-        } catch (Exception e) {}
-        try {
-            sb.append("Total dépenses : ").append(String.format("%.2f", connectedUser.getTotalDepenses())).append(" €\n");
-        } catch (Exception e) {}
+        sb.append("<html><div style='font-family: Segoe UI; margin: 20px;'>");
+        
+        // En-tête
+        sb.append("<div style='font-size: 24px; margin-bottom: 20px; text-align: center;'>");
+        sb.append("👤 FICHE CLIENT");
+        sb.append("</div>");
+
+        // Informations client
+        sb.append("<div style='background-color: #f8f8f8; padding: 20px; border-radius: 8px; margin: 10px 0;'>");
+        sb.append("<h3 style='margin: 0 0 10px 0; color: #333;'>INFORMATIONS PERSONNELLES</h3>");
+        sb.append("<p style='margin: 5px 0;'>Nom : ").append(connectedUser.getNom()).append("</p>");
+        sb.append("<p style='margin: 5px 0;'>Prénom : ").append(connectedUser.getPrenom()).append("</p>");
+        sb.append("</div>");
+
+        // Informations compte
+        sb.append("<div style='background-color: #f0f0f0; padding: 20px; border-radius: 8px; margin: 15px 0;'>");
+        sb.append("<h3 style='margin: 0 0 10px 0; color: #333;'>COMPTE</h3>");
+        sb.append("<p style='margin: 5px 0;'>Solde actuel : ").append(String.format("%.2f", connectedUser.getSolde())).append(" €</p>");
+        sb.append("<p style='margin: 5px 0;'>Pizzas achetées : ").append(connectedUser.getPizzasAchetees()).append("</p>");
+        sb.append("<p style='margin: 5px 0;'>Total dépenses : ").append(String.format("%.2f", connectedUser.getTotalDepenses())).append(" €</p>");
+
         // Fidélité
         int reste = 10 - (connectedUser.getPizzasAchetees() % 10);
         if (reste == 10 && connectedUser.getPizzasAchetees() > 0) {
-        // C'est la 10e, 20e, 30e... commande => pizza offerte
-            sb.append("🎉 Cette commande est OFFERTE grâce à votre fidélité !\n");
+            sb.append("<div style='color: #FF8C00; margin: 15px 0; padding: 10px; background-color: #FFF3E0; border-radius: 5px;'>");
+            sb.append("🎁 <b>Votre prochaine pizza sera OFFERTE !</b>");
+            sb.append("</div>");
         } else {
-            sb.append("Fidélité : encore ").append(reste).append(" commande(s) avant une pizza offerte.\n");
+            sb.append("<div style='margin: 15px 0; padding: 10px; background-color: #E8F5E9; border-radius: 5px;'>");
+            sb.append("🎯 Plus que ").append(reste).append(" commande(s) avant votre pizza gratuite");
+            sb.append("</div>");
         }
+        sb.append("</div>");
 
+        // Pied de page
+        sb.append("<div style='margin-top: 20px; text-align: center; color: #666; font-size: 14px;'>");
+        sb.append("RaPizz - La vera pizza italiana");
+        sb.append("</div>");
+
+        sb.append("</div></html>");
         ficheTextArea.setText(sb.toString());
+        
+        // Remonter au début
+        ficheTextArea.setCaretPosition(0);
     }
     // --- End fiche page ---
 
@@ -691,11 +765,19 @@ public class App {
             BorderFactory.createMatteBorder(0, 0, 3, 0, verdeOliva),
             BorderFactory.createEmptyBorder(0, 0, 15, 0)
         ));
-        panel.add(headerLabel, BorderLayout.NORTH);
 
-        // Panneau principal
-        JPanel mainPanel = new JPanel(new BorderLayout(20, 0));
-        mainPanel.setOpaque(false);
+        // Créer un panneau scrollable pour tout le contenu
+        JPanel contentPanel = new JPanel(new BorderLayout(20, 20));
+        contentPanel.setOpaque(false);
+        JScrollPane mainScrollPane = new JScrollPane(contentPanel);
+        mainScrollPane.setBorder(null);
+        mainScrollPane.setOpaque(false);
+        mainScrollPane.getViewport().setOpaque(false);
+        mainScrollPane.getVerticalScrollBar().setUnitIncrement(16);
+
+        // Ajouter l'en-tête et le panneau scrollable au panneau principal
+        panel.add(headerLabel, BorderLayout.NORTH);
+        panel.add(mainScrollPane, BorderLayout.CENTER);
 
         // Panneau gauche (liste des pizzas et taille)
         JPanel leftPanel = new JPanel(new BorderLayout(0, 15));
@@ -790,8 +872,8 @@ public class App {
         rightPanel.add(ingredientsScroll, BorderLayout.CENTER);
         rightPanel.add(prixPanel, BorderLayout.SOUTH);
 
-        mainPanel.add(leftPanel, BorderLayout.WEST);
-        mainPanel.add(rightPanel, BorderLayout.CENTER);
+        contentPanel.add(leftPanel, BorderLayout.WEST);
+        contentPanel.add(rightPanel, BorderLayout.CENTER);
 
         // Panneau du bas avec le bouton de commande et le statut
         JPanel bottomPanel = new JPanel(new BorderLayout(0, 10));
@@ -809,8 +891,7 @@ public class App {
         bottomPanel.add(orderButton, BorderLayout.NORTH);
         bottomPanel.add(statusLabel, BorderLayout.CENTER);
 
-        panel.add(mainPanel, BorderLayout.CENTER);
-        panel.add(bottomPanel, BorderLayout.SOUTH);
+        contentPanel.add(bottomPanel, BorderLayout.SOUTH);
 
         // Liste des pizzas
         List<src.model.Pizza> pizzas = new ArrayList<>();
@@ -964,63 +1045,20 @@ public class App {
 
                 src.model.Vehicule vehicule = vehicules.isEmpty() ? null : vehicules.get((int)(Math.random() * vehicules.size()));
 
-                StringBuilder sb = new StringBuilder();
-                sb.append("<html><div style='text-align: center; font-family: Segoe UI;'>");
+                // Génération de la fiche de livraison
+                String typeVehicule = vehicule != null ? vehicule.getType() : null;
+                String immatriculation = vehicule != null ? vehicule.getImmatriculation() : null;
                 
-                // Titre avec icône
-                sb.append("<div style='font-size: 16px; margin-bottom: 10px;'>");
-                sb.append("🎉 Votre commande est arrivée");
-                sb.append("</div>");
-
-                // Détails de la commande
-                sb.append("<div style='background-color: #f8f8f8; padding: 10px; border-radius: 5px; margin: 5px 0;'>");
-                sb.append("🍕 <b>Pizza :</b> ").append(pizza.getNom()).append(" (").append(taille.getNom()).append(")<br>");
-                
-                // Prix et statut de gratuité
-                if (gratuiteRetard) {
-                    sb.append("<div style='color: red; margin: 5px 0;'>");
-                    sb.append("⚠️ <b>OFFERTE</b> (retard > 30 min)");
-                    sb.append("</div>");
-                } else if (gratuiteFidelite) {
-                    sb.append("<div style='color: #FF8C00; margin: 5px 0;'>");
-                    sb.append("🎁 <b>OFFERTE</b> (fidélité)");
-                    sb.append("</div>");
-                } else {
-                    sb.append("💶 <b>Prix :</b> ").append(String.format("%.2f", prix)).append(" €<br>");
-                }
-                sb.append("</div>");
-
-                // Détails de la livraison
-                sb.append("<div style='background-color: #f0f0f0; padding: 10px; border-radius: 5px; margin: 5px 0;'>");
-                sb.append("🚚 <b>Détails livraison :</b><br>");
-                sb.append("👤 Livreur : ").append(finalLivreur.getNom()).append("<br>");
-                if (vehicule != null) {
-                    sb.append("🚗 Véhicule : ").append(vehicule.getType()).append(" (").append(vehicule.getImmatriculation()).append(")<br>");
-                }
-                sb.append("⏱️ Temps prévu : ").append(String.format("%.2f", (double)expectedTime)).append(" min<br>");
-                sb.append("⏱️ Temps réel : ").append(String.format("%.2f", (double)realTime)).append(" min<br>");
-                
-                // Affichage du retard avec couleur appropriée
-                if (retard > 0) {
-                    String retardColor = retard > 30 ? "red" : (retard > 15 ? "#FF8C00" : "#FFD700");
-                    sb.append("<span style='color: ").append(retardColor).append(";'>");
-                    sb.append("⏳ Retard : ").append(String.format("%.2f", (double)retard)).append(" min");
-                    sb.append("</span>");
-                } else {
-                    sb.append("<span style='color: green;'>✅ Livré à l'heure</span>");
-                }
-                sb.append("</div>");
-
-                // Information sur le solde
-                sb.append("<div style='margin-top: 10px;'>");
-                sb.append("💰 <b>Solde après commande :</b> ").append(String.format("%.2f", gratuiteFinale ? connectedUser.getSolde() : connectedUser.getSolde() - prix)).append(" €");
-                sb.append("</div>");
-
-                sb.append("</div></html>");
-                statusLabel.setText(sb.toString());
+                statusLabel.setText(generateFicheLivraison(
+                    pizza.getNom(), taille.getNom(),
+                    pizza.getPrixBase(), prix,
+                    finalLivreur.getNom(),
+                    typeVehicule, immatriculation,
+                    expectedTime, realTime, retard,
+                    gratuiteRetard, gratuiteFidelite
+                ));
                 orderButton.setEnabled(true);
 
-                // --- Enregistrement en base ---
                 try {
                     java.sql.Timestamp now = new java.sql.Timestamp(System.currentTimeMillis());
                     int idVehicule = vehicule != null ? vehicule.getId() : 1; // fallback
@@ -1063,7 +1101,7 @@ public class App {
                 updateSoldeHeader();
 
                 // Réinitialiser l'écran après un délai
-                Timer resetTimer = new Timer(10000, evt -> {
+                Timer resetTimer = new Timer(15000, evt -> {
                     statusLabel.setText(" ");
                     orderButton.setEnabled(true);
                     pizzaList.clearSelection();
@@ -1279,5 +1317,77 @@ public class App {
                 logoutButton.setVisible(connectedUser != null);
             }
         }
+    }
+
+    // Méthode pour générer la fiche de livraison
+    private String generateFicheLivraison(String nomPizza, String nomTaille, double prixBase, double prixFinal, 
+                                        String nomLivreur, String typeVehicule, String immatriculation,
+                                        int tempsPrevu, int tempsReel, int retard, 
+                                        boolean gratuiteRetard, boolean gratuiteFidelite) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("<html><div style='font-family: Segoe UI; margin: 20px;'>");
+        
+        // En-tête de la fiche de livraison
+        sb.append("<div style='font-size: 24px; margin-bottom: 20px; text-align: center;'>");
+        sb.append("📝 FICHE DE LIVRAISON");
+        sb.append("</div>");
+
+        // Informations client
+        sb.append("<div style='background-color: #f8f8f8; padding: 20px; border-radius: 8px; margin: 10px 0;'>");
+        sb.append("<h3 style='margin: 0 0 10px 0; color: #333;'>CLIENT</h3>");
+        sb.append("<p style='margin: 5px 0;'>Nom : ").append(connectedUser.getNom()).append("</p>");
+        sb.append("<p style='margin: 5px 0;'>Prénom : ").append(connectedUser.getPrenom()).append("</p>");
+        sb.append("</div>");
+
+        // Informations commande
+        sb.append("<div style='background-color: #f0f0f0; padding: 20px; border-radius: 8px; margin: 15px 0;'>");
+        sb.append("<h3 style='margin: 0 0 10px 0; color: #333;'>COMMANDE</h3>");
+        sb.append("<p style='margin: 5px 0;'>Date : ").append(new java.sql.Timestamp(System.currentTimeMillis()).toString()).append("</p>");
+        sb.append("<p style='margin: 5px 0;'>Pizza : ").append(nomPizza).append(" (").append(nomTaille).append(")</p>");
+        sb.append("<p style='margin: 5px 0;'>Prix de base : ").append(String.format("%.2f", prixBase)).append(" €</p>");
+        sb.append("<p style='margin: 5px 0;'>Prix final : ").append(String.format("%.2f", prixFinal)).append(" €</p>");
+        
+        // Statut de gratuité
+        if (gratuiteRetard) {
+            sb.append("<div style='color: red; margin: 15px 0; padding: 10px; background-color: #FFEBEE; border-radius: 5px;'>");
+            sb.append("⚠️ <b>OFFERTE</b> (retard > 30 min)");
+            sb.append("</div>");
+        } else if (gratuiteFidelite) {
+            sb.append("<div style='color: #FF8C00; margin: 15px 0; padding: 10px; background-color: #FFF3E0; border-radius: 5px;'>");
+            sb.append("🎁 <b>OFFERTE</b> (fidélité)");
+            sb.append("</div>");
+        }
+        sb.append("</div>");
+
+        // Informations livraison
+        sb.append("<div style='background-color: #f8f8f8; padding: 20px; border-radius: 8px; margin: 15px 0;'>");
+        sb.append("<h3 style='margin: 0 0 10px 0; color: #333;'>LIVRAISON</h3>");
+        sb.append("<p style='margin: 5px 0;'>Livreur : ").append(nomLivreur).append("</p>");
+        if (typeVehicule != null && immatriculation != null) {
+            sb.append("<p style='margin: 5px 0;'>Véhicule : ").append(typeVehicule).append(" (").append(immatriculation).append(")</p>");
+        }
+        sb.append("<p style='margin: 5px 0;'>Temps prévu : ").append(String.format("%d", tempsPrevu)).append(" min</p>");
+        sb.append("<p style='margin: 5px 0;'>Temps réel : ").append(String.format("%d", tempsReel)).append(" min</p>");
+        
+        // Affichage du retard avec couleur appropriée
+        if (retard > 0) {
+            String retardColor = retard > 30 ? "#F44336" : (retard > 15 ? "#FF8C00" : "#FFD700");
+            sb.append("<div style='color: ").append(retardColor).append("; margin: 10px 0; padding: 10px; background-color: #FFFFFF; border-radius: 5px; border: 1px solid ").append(retardColor).append(";'>");
+            sb.append("<b>Retard : ").append(retard).append(" min</b>");
+            sb.append("</div>");
+        } else {
+            sb.append("<div style='color: #4CAF50; margin: 10px 0; padding: 10px; background-color: #E8F5E9; border-radius: 5px;'>");
+            sb.append("<b>✓ Livré à l'heure</b>");
+            sb.append("</div>");
+        }
+        sb.append("</div>");
+
+        // Pied de page
+        sb.append("<div style='margin-top: 20px; text-align: center; color: #666; font-size: 14px;'>");
+        sb.append("RaPizz - La vera pizza italiana");
+        sb.append("</div>");
+
+        sb.append("</div></html>");
+        return sb.toString();
     }
 }

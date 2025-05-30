@@ -104,12 +104,10 @@ public ClientCommandeStat getMeilleurClient() throws SQLException {
 
     public double getMoyenneCommandesParClient() throws SQLException {
         String sql = """
-            SELECT AVG(nb) AS moyenne_commandes
-            FROM (
-                SELECT COUNT(*) AS nb
-                FROM Livraison
-                GROUP BY id_client
-            ) AS sous_req;
+            SELECT 
+                CAST(COUNT(DISTINCT liv.id) AS DECIMAL) / COUNT(DISTINCT c.id) AS moyenne_commandes
+            FROM Client c
+            LEFT JOIN Livraison liv ON c.id = liv.id_client;
         """;
 
         try (PreparedStatement ps = conn.prepareStatement(sql);
