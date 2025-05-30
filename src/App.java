@@ -670,7 +670,9 @@ public class App {
         try {
             tailles.addAll(serviceProvider.pizzaService.getAllTailles());
             for (var t : tailles) {
-                tailleCombo.addItem(t.getNom() + " (x" + t.getCoefficientPrix() + ")");
+                int pourcentage = (int) Math.round((t.getCoefficientPrix() - 1) * 100);
+                String affichage = t.getNom() + (pourcentage >= 0 ? " (+" : " (") + pourcentage + "%)";
+                tailleCombo.addItem(affichage);            
             }
         } catch (Exception e) {
             tailleCombo.addItem("Erreur tailles");
@@ -755,8 +757,8 @@ public class App {
             int idxPizza = pizzaList.getSelectedIndex();
             int idxTaille = tailleCombo.getSelectedIndex();
             if (idxPizza >= 0 && idxPizza < pizzas.size() && idxTaille >= 0 && idxTaille < tailles.size()) {
-                double prix = pizzas.get(idxPizza).getPrixBase() * tailles.get(idxTaille).coefficientPrix;
-                prixLabel.setText("Prix : " + String.format("%.2f", prix) + " €");
+                double prix = Math.round(pizzas.get(idxPizza).getPrixBase() * tailles.get(idxTaille).coefficientPrix);
+                prixLabel.setText("Prix : " + prix + " €");
             } else {
                 prixLabel.setText("Prix : -");
             }
@@ -769,8 +771,8 @@ public class App {
             int idxTaille = tailleCombo.getSelectedIndex();
             double coef = (idxTaille >= 0 && idxTaille < tailles.size()) ? tailles.get(idxTaille).getCoefficientPrix() : 1.0;
             for (var p : pizzas) {
-                double prix = p.getPrixBase() * coef;
-                pizzaListModel.addElement(p.getNom() + " (" + String.format("%.2f", prix) + " €)");
+                double prix = Math.round(p.getPrixBase() * coef);
+                pizzaListModel.addElement(p.getNom() + " (" + prix + " €)");
             }
             if (selectedIdx >= 0 && selectedIdx < pizzaListModel.size()) pizzaList.setSelectedIndex(selectedIdx);
         };
@@ -823,7 +825,7 @@ public class App {
 
             src.model.Pizza pizza = pizzas.get(idxPizza);
             src.model.Taille taille = tailles.get(idxTaille);
-            double prix = pizza.getPrixBase() * taille.getCoefficientPrix();
+            double prix = Math.round(pizza.getPrixBase() * taille.getCoefficientPrix());
 
             // Vérification fidélité et solde
             int commandesAvant = connectedUser.getPizzasAchetees();
@@ -832,14 +834,124 @@ public class App {
 
             if (!gratuite && connectedUser.getSolde() < prix) {
                 JOptionPane.showMessageDialog(panel, 
-                    "Solde insuffisant pour commander cette pizza (" + String.format("%.2f", prix) + " €).", 
+                    "Solde insuffisant pour commander cette pizza (" + prix + " €).", 
                     "Solde insuffisant", 
                     JOptionPane.WARNING_MESSAGE);
                 return;
             }
 
             // Traitement de la commande...
-            // [Le reste du code de traitement de la commande reste inchangé]
+            statusLabel.setText("Votre pizza est en cours d'expédition...");
+            orderButton.setEnabled(false);
+
+            // Choix du livreur aléatoire
+            List<src.model.Livreur> livreurs = new ArrayList<>();
+            src.model.Livreur livreur = null;
+            try {
+                livreurs.addAll(serviceProvider.livreurService.getAllLivreurs());
+                if (!livreurs.isEmpty()) {
+                    livreur = livreurs.get((int)(Math.random() * livreurs.size()));
+                }
+            } catch (Exception ex) {}
+            
+            if (livreur == null) {
+                statusLabel.setText("❌ Erreur : Aucun livreur disponible");
+                orderButton.setEnabled(true);
+                return;
+            }
+
+            final src.model.Livreur finalLivreur = livreur;
+            int expectedTime = 20; // Temps prévu en minutes
+
+            // Calcul du temps réel avec probabilité de retard basée sur l'historique du livreur
+            double retardProbability = 0.2 + (finalLivreur.getNombreRetards() * 0.1); // Augmente avec le nombre de retards
+            boolean auraRetard = Math.random() < retardProbability;
+            
+            int tempsBase = 15 + (int)(Math.random() * 5); // Temps de base entre 15 et 20 minutes
+            int retardMinutes = auraRetard ? 5 + (int)(Math.random() * 35) : 0; // Retard possible jusqu'à 40 minutes
+            int realTime = tempsBase + retardMinutes;
+            
+            // Le retard est la différence positive entre le temps réel et le temps prévu
+            int retard = Math.max(0, realTime - expectedTime);
+
+            Timer timer = new Timer(realTime * 200, ev -> {
+                boolean gratuiteRetard = retard > 30; // Pizza gratuite si plus de 30 minutes de retard
+                boolean gratuiteFinale = gratuiteRetard || gratuiteFidelite;
+                StringBuilder sb = new StringBuilder();
+                sb.append("<html>Votre pizza est arrivée !<br>");
+                sb.append("🍕 Pizza : ").append(pizza.getNom()).append(" (").append(taille.getNom()).append(")<br>");
+                sb.append("🚴 Livreur : ").append(finalLivreur.getNom()).append("<br>");
+                sb.append("⏱️ Temps prévu : ").append(expectedTime).append(" min<br>");
+                sb.append("⏱️ Temps réel : ").append(realTime).append(" min<br>");
+                sb.append("⏳ Retard : ").append(retard).append(" min<br>");
+                if (gratuiteRetard) {
+                    sb.append("<b style='color:red;'>Pizza OFFERTE (retard &gt; 30 min) !</b><br>");
+                } else if (gratuiteFidelite) {
+                    sb.append("<b style='color:orange;'>Pizza OFFERTE grâce à la fidélité !</b><br>");
+                } else {
+                    sb.append("<b>Pizza facturée : ").append(String.format("%.2f", prix)).append(" €</b><br>");
+                }
+                sb.append("Solde après commande : ").append(String.format("%.2f", gratuiteFinale ? connectedUser.getSolde() : connectedUser.getSolde() - prix)).append(" €<br>");
+                sb.append("</html>");
+                statusLabel.setText(sb.toString());
+                orderButton.setEnabled(true);
+
+                // --- Choix véhicule aléatoire ---
+                List<src.model.Vehicule> vehicules = new ArrayList<>();
+                try {
+                    vehicules.addAll(serviceProvider.vehiculeService.getVehiculesJamaisServi());
+                    if (vehicules.isEmpty()) {
+                        // Si pas de véhicules jamais utilisés, prendre tous les véhicules
+                        vehicules.addAll(serviceProvider.vehiculeService.getAllVehicules());
+                    }
+                } catch (Exception ex) {}
+
+                src.model.Vehicule vehicule = vehicules.isEmpty() ? null : vehicules.get((int)(Math.random() * vehicules.size()));
+
+                // --- Enregistrement en base ---
+                try {
+                    java.sql.Timestamp now = new java.sql.Timestamp(System.currentTimeMillis());
+                    int idVehicule = vehicule != null ? vehicule.getId() : 1; // fallback
+                    int idLivraison = serviceProvider.livraisonService.createLivraison(
+                        now, retard, connectedUser.getId(), finalLivreur.getId(), idVehicule
+                    );
+                    serviceProvider.commandePizzaService.createCommandePizza(
+                        idLivraison, pizza.getId(), taille.getId(), 1, prix, gratuiteFinale,
+                        gratuiteRetard ? "Retard > 30min" : (gratuiteFidelite ? "Fidélité" : null)
+                    );
+                    // Met à jour le solde et stats client
+                    if (!gratuiteFinale) {
+                        connectedUser.setSolde(connectedUser.getSolde() - prix);
+                        connectedUser.setTotalDepenses(connectedUser.getTotalDepenses() + prix);
+                    }
+                    connectedUser.setPizzasAchetees(connectedUser.getPizzasAchetees() + 1);
+                    
+                    serviceProvider.clientService.updateSoldeEtStats(
+                        connectedUser.getId(),
+                        connectedUser.getSolde(),
+                        connectedUser.getPizzasAchetees(),
+                        connectedUser.getTotalDepenses()
+                    );
+                    // Met à jour le nombre de retards du livreur
+                    if (retard > 0) {
+                        serviceProvider.livreurService.incrementRetard(finalLivreur.getId());
+                    }
+                    // Met à jour le nombre d'utilisations du véhicule
+                    if (vehicule != null) {
+                        serviceProvider.vehiculeService.incrementUtilisation(vehicule.getId());
+                    }
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(panel, 
+                        "Erreur lors de l'enregistrement de la commande : " + ex.getMessage(), 
+                        "Erreur", 
+                        JOptionPane.ERROR_MESSAGE);
+                }
+
+                updateFiche();
+                updateSoldeHeader();
+            });
+            timer.setRepeats(false);
+            timer.start();
         });
 
         return panel;

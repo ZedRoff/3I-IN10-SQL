@@ -15,7 +15,7 @@ public class CommandePizzaService {
             ps.setInt(2, idPizza);
             ps.setInt(3, idTaille);
             ps.setInt(4, quantite);
-            ps.setDouble(5, prixFacture);
+            ps.setDouble(5, Math.round(prixFacture));
             ps.setBoolean(6, estGratuite);
             ps.setString(7, raisonGratuite);
             ps.executeUpdate();

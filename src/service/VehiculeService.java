@@ -36,10 +36,26 @@ public class VehiculeService {
         }
     }
     public void incrementUtilisation(int idVehicule) throws SQLException {
-    String sql = "UPDATE Vehicule SET nombre_utilisations = nombre_utilisations + 1 WHERE id = ?";
-    try (PreparedStatement ps = conn.prepareStatement(sql)) {
-        ps.setInt(1, idVehicule);
-        ps.executeUpdate();
+        String sql = "UPDATE Vehicule SET nombre_utilisations = nombre_utilisations + 1 WHERE id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, idVehicule);
+            ps.executeUpdate();
+        }
     }
-}
+
+    public List<Vehicule> getAllVehicules() throws SQLException {
+        String sql = "SELECT id, type, immatriculation FROM Vehicule";
+        try (PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            List<Vehicule> vehicules = new ArrayList<>();
+            while (rs.next()) {
+                vehicules.add(new Vehicule(
+                    rs.getInt("id"),
+                    rs.getString("type"),
+                    rs.getString("immatriculation")
+                ));
+            }
+            return vehicules;
+        }
+    }
 }
