@@ -1,3 +1,4 @@
+-- Ingredient
 INSERT INTO Ingredient (id, nom) VALUES (1, 'Anchois');
 INSERT INTO Ingredient (id, nom) VALUES (2, 'Artichaut');
 INSERT INTO Ingredient (id, nom) VALUES (3, 'Aubergine');
@@ -30,6 +31,8 @@ INSERT INTO Ingredient (id, nom) VALUES (29, 'Saumon fumé');
 INSERT INTO Ingredient (id, nom) VALUES (30, 'Thon');
 INSERT INTO Ingredient (id, nom) VALUES (31, 'Tomate');
 INSERT INTO Ingredient (id, nom) VALUES (32, 'Viande hachée');
+
+-- Pizza
 INSERT INTO Pizza (id, nom, prix_base) VALUES (1, 'Giovanni', 13.50);
 INSERT INTO Pizza (id, nom, prix_base) VALUES (2, 'Palermo', 13.00);
 INSERT INTO Pizza (id, nom, prix_base) VALUES (3, 'Regina', 12.00);
@@ -54,6 +57,8 @@ INSERT INTO Pizza (id, nom, prix_base) VALUES (21, 'Chèvre', 13.00);
 INSERT INTO Pizza (id, nom, prix_base) VALUES (22, 'Margherita', 10.00);
 INSERT INTO Pizza (id, nom, prix_base) VALUES (23, 'Quatre fromages', 13.50);
 INSERT INTO Pizza (id, nom, prix_base) VALUES (24, 'Calzone soufflée', 13.00);
+
+-- Composition
 INSERT INTO Composition (id_pizza, id_ingredient) VALUES (1, 31);
 INSERT INTO Composition (id_pizza, id_ingredient) VALUES (1, 11);
 INSERT INTO Composition (id_pizza, id_ingredient) VALUES (1, 14);
@@ -170,17 +175,41 @@ INSERT INTO Composition (id_pizza, id_ingredient) VALUES (24, 31);
 INSERT INTO Composition (id_pizza, id_ingredient) VALUES (24, 11);
 INSERT INTO Composition (id_pizza, id_ingredient) VALUES (24, 14);
 INSERT INTO Composition (id_pizza, id_ingredient) VALUES (24, 19);
-INSERT INTO Client (id, nom, prenom, solde, pizzas_achetees) VALUES (1, 'HAKIM', 'Justine', 74.20, 12);
+
+-- Clients
+INSERT INTO Client (id, nom, prenom, solde, pizzas_achetees, total_depenses) VALUES 
+(1, 'HAKIM', 'Justine', 74.20, 12, 156.80),
+(2, 'DUBOIS', 'Thomas', 25.50, 8, 98.40),
+(3, 'MARTIN', 'Sophie', 42.30, 15, 187.50),
+(4, 'PETIT', 'Lucas', 12.80, 3, 38.90),
+(5, 'BERNARD', 'Emma', 95.60, 20, 245.30),
+(6, 'ROBERT', 'Hugo', 5.20, 6, 78.60),
+(7, 'RICHARD', 'Léa', 150.00, 0, 0.00),
+(8, 'MOREAU', 'Gabriel', 28.90, 4, 52.40),
+(9, 'LAURENT', 'Chloé', 63.70, 9, 118.80),
+(10, 'SIMON', 'Arthur', 82.40, 7, 89.90);
+
+-- Insertion des véhicules
 INSERT INTO Vehicule (id, type, immatriculation, nombre_utilisations) VALUES 
-(1, 'Moto', 'AB-001-CD', 0),
-(2, 'Voiture', 'AB-002-CD', 0),
-(3, 'Moto', 'AB-003-CD', 0),
-(4, 'Voiture', 'AB-004-CD', 0),
-(5, 'Voiture', 'AB-005-CD', 0);
+(1, 'Moto', 'AB-001-CD', 45),
+(2, 'Voiture', 'AB-002-CD', 38),
+(3, 'Moto', 'AB-003-CD', 52),
+(4, 'Voiture', 'AB-004-CD', 29),
+(5, 'Moto', 'AB-005-CD', 41),
+(6, 'Voiture', 'AB-006-CD', 15),
+(7, 'Moto', 'AB-007-CD', 33),
+(8, 'Voiture', 'AB-008-CD', 27);
+
+-- Insertion des livreurs
 INSERT INTO Livreur (id, nom, type_conducteur, nombre_retards) VALUES 
-(1, 'DUPONT', 'A', 2),
+(1, 'DUPONT', 'A2', 2),
 (2, 'MARTIN', 'B', 0),
-(3, 'LEBLANC', 'A', 1);
+(3, 'SADDIK', 'A2', 1),
+(4, 'ROUSSEAU', 'A1', 3),
+(5, 'GIRARD', 'B', 0),
+(6, 'ROUX', 'A2', 1),
+(7, 'FONTAINE', 'A1', 0),
+(8, 'MERCIER', 'B', 2);
 
 -- Insertion des tailles prédéfinies
 INSERT INTO Taille (nom, coefficient_prix) VALUES 
@@ -188,14 +217,26 @@ INSERT INTO Taille (nom, coefficient_prix) VALUES
 ('humaine', 1.0),
 ('ogresse', 1.33);
 
-INSERT INTO Livraison (date, retard, id_client, id_livreur, id_vehicule) VALUES 
-('2024-05-01 19:30:00', 0, 1, 1, 1),
-('2024-05-02 20:15:00', 5, 1, 3, 2),
-('2024-05-03 17:15:00', 10, 1, 1, 2);
+-- Insertion des livraisons
+INSERT INTO Livraison ( date, retard, id_client, id_livreur, id_vehicule) VALUES 
+('2025-02-15 19:30:00', 0, 1, 1, 1),
+('2025-02-15 20:15:00', 5, 2, 3, 2),
+('2025-02-16 17:15:00', 10, 1, 1, 2),
+('2025-02-16 18:45:00', 0, 3, 2, 3),
+('2025-02-17 19:20:00', 15, 4, 4, 1),
+('2025-02-17 20:30:00', 0, 5, 5, 4),
+('2025-02-18 12:15:00', 0, 6, 6, 5),
+('2025-02-18 13:45:00', 8, 7, 7, 6),
+('2025-02-19 19:10:00', 0, 8, 8, 7),
+('2025-02-19 20:05:00', 0, 9, 1, 8),
+('2025-02-20 18:30:00', 12, 10, 2, 1),
+('2025-02-20 19:45:00', 0, 1, 3, 2),
+('2025-02-21 20:20:00', 0, 2, 4, 3),
+('2025-02-21 21:00:00', 20, 3, 5, 4),
+('2025-02-22 18:15:00', 0, 4, 6, 5);
 
+-- Commande
 INSERT INTO Commande_pizza (id_livraison, id_pizza, id_taille, quantite, prix_facture, est_gratuite, raison_gratuite) VALUES 
 (1, 1, 2, 1, 13.50, FALSE, NULL),
 (1, 2, 1, 2, 17.42, TRUE, 'Fidélité client'),
 (2, 3, 3, 1, 15.96, FALSE, NULL);
-
-
