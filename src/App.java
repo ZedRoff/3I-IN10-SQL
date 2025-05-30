@@ -54,9 +54,19 @@ public class App {
         JLabel titleLabel = new JLabel("RaPizz");
         titleLabel.setFont(titleFont);
         titleLabel.setForeground(gialloOro);
-        titleLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        titleLabel.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
-        titleLabel.addMouseListener(new MouseAdapter() {
+
+        ImageIcon pizzaIcon = new ImageIcon(new ImageIcon("pizzeria.png").getImage().getScaledInstance(50, 50, Image.SCALE_SMOOTH));
+        JLabel iconLabel = new JLabel(pizzaIcon);
+
+        JPanel titlePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 5));
+        titlePanel.setOpaque(false);
+        titlePanel.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 20));
+        titlePanel.add(iconLabel);
+        titlePanel.add(titleLabel);
+        titlePanel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+        // Effet de survol sur tout le panneau
+        MouseAdapter titleHoverEffect = new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
                 titleLabel.setForeground(Color.WHITE);
@@ -69,15 +79,13 @@ public class App {
             public void mouseClicked(MouseEvent e) {
                 handleNavigation("home");
             }
-        });
+        };
 
-        ImageIcon pizzaIcon = new ImageIcon(new ImageIcon("pizzeria.png").getImage().getScaledInstance(50, 50, Image.SCALE_SMOOTH));
-        JLabel iconLabel = new JLabel(pizzaIcon);
+        // Appliquer l'effet de survol à tous les composants
+        titlePanel.addMouseListener(titleHoverEffect);
+        titleLabel.addMouseListener(titleHoverEffect);
+        iconLabel.addMouseListener(titleHoverEffect);
 
-        JPanel titlePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 0));
-        titlePanel.setOpaque(false);
-        titlePanel.add(iconLabel);
-        titlePanel.add(titleLabel);
         header.add(titlePanel, BorderLayout.WEST);
 
         // Nav Panel
@@ -506,18 +514,21 @@ public class App {
         headerPanel.add(headerLabel, BorderLayout.WEST);
 
         // Bouton de déconnexion dans l'en-tête de la page
-        logoutButton = new JButton("Se déconnecter");
-        logoutButton.setIcon(new ImageIcon(new ImageIcon("sortir.png").getImage().getScaledInstance(20, 20, Image.SCALE_SMOOTH)));
-        logoutButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        logoutButton.setBackground(rossoPomodoro);
-        logoutButton.setForeground(Color.BLACK);
-        logoutButton.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(rossoPomodoro.darker(), 2),
-            BorderFactory.createEmptyBorder(8, 15, 8, 15)
-        ));
-        logoutButton.setFocusPainted(false);
-        logoutButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        logoutButton.addActionListener(e -> handleLogout());
+        if (logoutButton == null) {
+            logoutButton = new JButton("Se déconnecter");
+            logoutButton.setIcon(new ImageIcon(new ImageIcon("sortir.png").getImage().getScaledInstance(20, 20, Image.SCALE_SMOOTH)));
+            logoutButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
+            logoutButton.setBackground(rossoPomodoro);
+            logoutButton.setForeground(Color.BLACK);
+            logoutButton.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(rossoPomodoro.darker(), 2),
+                BorderFactory.createEmptyBorder(8, 15, 8, 15)
+            ));
+            logoutButton.setFocusPainted(false);
+            logoutButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            logoutButton.addActionListener(e -> handleLogout());
+        }
+        logoutButton.setVisible(connectedUser != null);
         
         JPanel logoutPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         logoutPanel.setOpaque(false);
@@ -588,13 +599,13 @@ public class App {
         sb.append("Nom : ").append(connectedUser.getNom()).append("\n");
         sb.append("Prénom : ").append(connectedUser.getPrenom()).append("\n");
         try {
-            sb.append("Solde : ").append(connectedUser.getSolde()).append(" €\n");
+            sb.append("Solde : ").append(String.format("%.2f", connectedUser.getSolde())).append(" €\n");
         } catch (Exception e) {}
         try {
             sb.append("Pizzas achetées : ").append(connectedUser.getPizzasAchetees()).append("\n");
         } catch (Exception e) {}
         try {
-            sb.append("Total dépenses : ").append(connectedUser.getTotalDepenses()).append(" €\n");
+            sb.append("Total dépenses : ").append(String.format("%.2f", connectedUser.getTotalDepenses())).append(" €\n");
         } catch (Exception e) {}
         // Fidélité
         int reste = 10 - (connectedUser.getPizzasAchetees() % 10);
@@ -758,7 +769,7 @@ public class App {
             int idxTaille = tailleCombo.getSelectedIndex();
             if (idxPizza >= 0 && idxPizza < pizzas.size() && idxTaille >= 0 && idxTaille < tailles.size()) {
                 double prix = Math.round(pizzas.get(idxPizza).getPrixBase() * tailles.get(idxTaille).coefficientPrix);
-                prixLabel.setText("Prix : " + prix + " €");
+                prixLabel.setText(String.format("Prix : %.2f €", prix));
             } else {
                 prixLabel.setText("Prix : -");
             }
@@ -772,7 +783,7 @@ public class App {
             double coef = (idxTaille >= 0 && idxTaille < tailles.size()) ? tailles.get(idxTaille).getCoefficientPrix() : 1.0;
             for (var p : pizzas) {
                 double prix = Math.round(p.getPrixBase() * coef);
-                pizzaListModel.addElement(p.getNom() + " (" + prix + " €)");
+                pizzaListModel.addElement(String.format("%s (%.2f €)", p.getNom(), prix));
             }
             if (selectedIdx >= 0 && selectedIdx < pizzaListModel.size()) pizzaList.setSelectedIndex(selectedIdx);
         };
@@ -844,6 +855,12 @@ public class App {
             statusLabel.setText("Votre pizza est en cours d'expédition...");
             orderButton.setEnabled(false);
 
+            // Réinitialiser la sélection
+            pizzaList.clearSelection();
+            tailleCombo.setSelectedIndex(0);
+            ingredientsArea.setText("");
+            prixLabel.setText("Prix : -");
+
             // Choix du livreur aléatoire
             List<src.model.Livreur> livreurs = new ArrayList<>();
             src.model.Livreur livreur = null;
@@ -877,24 +894,6 @@ public class App {
             Timer timer = new Timer(realTime * 200, ev -> {
                 boolean gratuiteRetard = retard > 30; // Pizza gratuite si plus de 30 minutes de retard
                 boolean gratuiteFinale = gratuiteRetard || gratuiteFidelite;
-                StringBuilder sb = new StringBuilder();
-                sb.append("<html>Votre pizza est arrivée !<br>");
-                sb.append("🍕 Pizza : ").append(pizza.getNom()).append(" (").append(taille.getNom()).append(")<br>");
-                sb.append("🚴 Livreur : ").append(finalLivreur.getNom()).append("<br>");
-                sb.append("⏱️ Temps prévu : ").append(expectedTime).append(" min<br>");
-                sb.append("⏱️ Temps réel : ").append(realTime).append(" min<br>");
-                sb.append("⏳ Retard : ").append(retard).append(" min<br>");
-                if (gratuiteRetard) {
-                    sb.append("<b style='color:red;'>Pizza OFFERTE (retard &gt; 30 min) !</b><br>");
-                } else if (gratuiteFidelite) {
-                    sb.append("<b style='color:orange;'>Pizza OFFERTE grâce à la fidélité !</b><br>");
-                } else {
-                    sb.append("<b>Pizza facturée : ").append(String.format("%.2f", prix)).append(" €</b><br>");
-                }
-                sb.append("Solde après commande : ").append(String.format("%.2f", gratuiteFinale ? connectedUser.getSolde() : connectedUser.getSolde() - prix)).append(" €<br>");
-                sb.append("</html>");
-                statusLabel.setText(sb.toString());
-                orderButton.setEnabled(true);
 
                 // --- Choix véhicule aléatoire ---
                 List<src.model.Vehicule> vehicules = new ArrayList<>();
@@ -907,6 +906,62 @@ public class App {
                 } catch (Exception ex) {}
 
                 src.model.Vehicule vehicule = vehicules.isEmpty() ? null : vehicules.get((int)(Math.random() * vehicules.size()));
+
+                StringBuilder sb = new StringBuilder();
+                sb.append("<html><div style='text-align: center; font-family: Segoe UI;'>");
+                
+                // Titre avec icône
+                sb.append("<div style='font-size: 16px; margin-bottom: 10px;'>");
+                sb.append("🎉 Votre commande est arrivée");
+                sb.append("</div>");
+
+                // Détails de la commande
+                sb.append("<div style='background-color: #f8f8f8; padding: 10px; border-radius: 5px; margin: 5px 0;'>");
+                sb.append("🍕 <b>Pizza :</b> ").append(pizza.getNom()).append(" (").append(taille.getNom()).append(")<br>");
+                
+                // Prix et statut de gratuité
+                if (gratuiteRetard) {
+                    sb.append("<div style='color: red; margin: 5px 0;'>");
+                    sb.append("⚠️ <b>OFFERTE</b> (retard > 30 min)");
+                    sb.append("</div>");
+                } else if (gratuiteFidelite) {
+                    sb.append("<div style='color: #FF8C00; margin: 5px 0;'>");
+                    sb.append("🎁 <b>OFFERTE</b> (fidélité)");
+                    sb.append("</div>");
+                } else {
+                    sb.append("💶 <b>Prix :</b> ").append(String.format("%.2f", prix)).append(" €<br>");
+                }
+                sb.append("</div>");
+
+                // Détails de la livraison
+                sb.append("<div style='background-color: #f0f0f0; padding: 10px; border-radius: 5px; margin: 5px 0;'>");
+                sb.append("🚚 <b>Détails livraison :</b><br>");
+                sb.append("👤 Livreur : ").append(finalLivreur.getNom()).append("<br>");
+                if (vehicule != null) {
+                    sb.append("🚗 Véhicule : ").append(vehicule.getType()).append(" (").append(vehicule.getImmatriculation()).append(")<br>");
+                }
+                sb.append("⏱️ Temps prévu : ").append(String.format("%.2f", (double)expectedTime)).append(" min<br>");
+                sb.append("⏱️ Temps réel : ").append(String.format("%.2f", (double)realTime)).append(" min<br>");
+                
+                // Affichage du retard avec couleur appropriée
+                if (retard > 0) {
+                    String retardColor = retard > 30 ? "red" : (retard > 15 ? "#FF8C00" : "#FFD700");
+                    sb.append("<span style='color: ").append(retardColor).append(";'>");
+                    sb.append("⏳ Retard : ").append(String.format("%.2f", (double)retard)).append(" min");
+                    sb.append("</span>");
+                } else {
+                    sb.append("<span style='color: green;'>✅ Livré à l'heure</span>");
+                }
+                sb.append("</div>");
+
+                // Information sur le solde
+                sb.append("<div style='margin-top: 10px;'>");
+                sb.append("💰 <b>Solde après commande :</b> ").append(String.format("%.2f", gratuiteFinale ? connectedUser.getSolde() : connectedUser.getSolde() - prix)).append(" €");
+                sb.append("</div>");
+
+                sb.append("</div></html>");
+                statusLabel.setText(sb.toString());
+                orderButton.setEnabled(true);
 
                 // --- Enregistrement en base ---
                 try {
@@ -949,6 +1004,18 @@ public class App {
 
                 updateFiche();
                 updateSoldeHeader();
+
+                // Réinitialiser l'écran après un délai
+                Timer resetTimer = new Timer(10000, evt -> {
+                    statusLabel.setText(" ");
+                    orderButton.setEnabled(true);
+                    pizzaList.clearSelection();
+                    tailleCombo.setSelectedIndex(0);
+                    ingredientsArea.setText("");
+                    prixLabel.setText("Prix : -");
+                });
+                resetTimer.setRepeats(false);
+                resetTimer.start();
             });
             timer.setRepeats(false);
             timer.start();
@@ -986,6 +1053,36 @@ public class App {
         gbc.gridx = 1;
         dialog.add(prenomField, gbc);
 
+        // Validation en temps réel des champs
+        InputVerifier verifier = new InputVerifier() {
+            @Override
+            public boolean verify(JComponent input) {
+                JTextField textField = (JTextField) input;
+                String text = textField.getText().trim();
+                // Regex pour lettres (avec accents), espaces et tirets uniquement
+                return text.matches("^[a-zA-ZÀ-ÿ\\s-]+$") || text.isEmpty();
+            }
+        };
+
+        // Écouteur pour empêcher la saisie de caractères non autorisés
+        KeyAdapter keyValidator = new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                char c = e.getKeyChar();
+                if (!Character.isLetter(c) && c != 'é' && c != 'è' && c != 'à' && c != 'ù' && 
+                    c != 'â' && c != 'ê' && c != 'î' && c != 'ô' && c != 'û' && 
+                    c != 'ë' && c != 'ï' && c != 'ü' && c != 'ÿ' && 
+                    c != '-' && c != KeyEvent.VK_BACK_SPACE && c != KeyEvent.VK_DELETE) {
+                    e.consume();
+                }
+            }
+        };
+
+        nomField.setInputVerifier(verifier);
+        prenomField.setInputVerifier(verifier);
+        nomField.addKeyListener(keyValidator);
+        prenomField.addKeyListener(keyValidator);
+
         // Boutons
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton cancelButton = new JButton("Annuler");
@@ -996,6 +1093,16 @@ public class App {
         confirmButton.addActionListener(e -> {
             String nom = nomField.getText().trim();
             String prenom = prenomField.getText().trim();
+            
+            // Vérification finale des champs
+            if (!nom.matches("^[a-zA-ZÀ-ÿ\\s-]+$") || !prenom.matches("^[a-zA-ZÀ-ÿ\\s-]+$")) {
+                JOptionPane.showMessageDialog(dialog,
+                    "Les noms et prénoms ne peuvent contenir que des lettres, des tirets et des espaces.",
+                    "Format invalide",
+                    JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
             if (!nom.isEmpty() && !prenom.isEmpty()) {
                 try {
                     // Recherche client existant
@@ -1090,7 +1197,9 @@ public class App {
             updateSoldeHeader();
             updateFiche();
             cardLayout.show(mainPanel, "home");
-            logoutButton.setVisible(false);
+            if (logoutButton != null) {
+                logoutButton.setVisible(false);
+            }
         }
     }
 
@@ -1109,6 +1218,9 @@ public class App {
             updateStats();
         } else if ("fiche".equals(cardName)) {
             updateFiche();
+            if (logoutButton != null) {
+                logoutButton.setVisible(connectedUser != null);
+            }
         }
     }
 }
