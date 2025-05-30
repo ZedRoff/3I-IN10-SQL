@@ -278,41 +278,98 @@ public class App {
 
             sb.append("🚗 Véhicules jamais utilisés:\n");
             var notUsedVehicles = serviceProvider.vehiculeService.getVehiculesJamaisServi();
-            for (var v : notUsedVehicles) {
-                sb.append("  - ").append(v.type).append(" (").append(v.immatriculation).append(")\n");
+            if (notUsedVehicles.isEmpty()) {
+                sb.append("  Tous les véhicules ont déjà été utilisés\n");
+            } else {
+                for (var v : notUsedVehicles) {
+                    sb.append("  - ").append(v.type).append(" (").append(v.immatriculation).append(")\n");
+                }
             }
             sb.append("\n");
 
             sb.append("👤 Nombre de commandes par client:\n");
             var clientStats = serviceProvider.clientService.getNombreCommandesParClient();
-            for (var stat : clientStats) {
-                sb.append(String.format("  - %s %s: %d commandes\n", stat.getPrenom(), stat.getNom(), stat.getNbCommandes()));
+            if (clientStats.isEmpty()) {
+                sb.append("  Aucune commande enregistrée\n");
+            } else {
+                for (var stat : clientStats) {
+                    String nbCommandes = stat.getNbCommandes() == 0 ? "Aucune commande" : stat.getNbCommandes() + " commande" + (stat.getNbCommandes() > 1 ? "s" : "");
+                    sb.append(String.format("  - %s %s: %s\n", stat.getPrenom(), stat.getNom(), nbCommandes));
+                }
             }
             sb.append("\n");
 
             double avg = serviceProvider.clientService.getMoyenneCommandesParClient();
-            sb.append(String.format("📈 Moyenne des commandes par client: %.2f\n\n", avg));
+            if (avg == 0) {
+                sb.append("📈 Moyenne des commandes : Aucune commande enregistrée\n\n");
+            } else {
+                String moyenneFormatted = String.format("%.1f", avg);
+                sb.append(String.format("📈 Moyenne des commandes : %s commande%s par client\n\n", 
+                    moyenneFormatted,
+                    avg > 1 ? "s" : ""));
+            }
 
             var meilleurClient = serviceProvider.clientService.getMeilleurClient();
             sb.append("🥇 Meilleur client:\n");
-            sb.append(String.format("  %s %s (%d commandes)\n\n", meilleurClient.getPrenom(), meilleurClient.getNom(), meilleurClient.getNbCommandes()));
+            if (meilleurClient == null || meilleurClient.getNbCommandes() == 0) {
+                sb.append("  Aucun client n'a encore commandé\n\n");
+            } else {
+                sb.append(String.format("  %s %s (%d commande%s)\n\n", 
+                    meilleurClient.getPrenom(), 
+                    meilleurClient.getNom(), 
+                    meilleurClient.getNbCommandes(),
+                    meilleurClient.getNbCommandes() > 1 ? "s" : ""));
+            }
 
             var clientsAbove = serviceProvider.clientService.getClientsAuDessusDeLaMoyenne();
             sb.append("📈 Clients au-dessus de la moyenne:\n");
-            for (var c : clientsAbove) {
-                sb.append(String.format("  - %s %s: %d commandes\n", c.getPrenom(), c.getNom(), c.getNbCommandes()));
+            if (clientsAbove.isEmpty()) {
+                sb.append("  Aucun client au-dessus de la moyenne\n");
+            } else {
+                for (var c : clientsAbove) {
+                    sb.append(String.format("  - %s %s: %d commande%s\n", 
+                        c.getPrenom(), 
+                        c.getNom(), 
+                        c.getNbCommandes(),
+                        c.getNbCommandes() > 1 ? "s" : ""));
+                }
             }
             sb.append("\n");
 
             var bestPizza = serviceProvider.pizzaService.getMeilleurePizza();
-            sb.append(String.format("🍕 Pizza la plus commandée: %s (%d commandes)\n\n", bestPizza.getNom(), bestPizza.getNbCommandes()));
+            sb.append("🍕 Pizza la plus commandée: ");
+            if (bestPizza == null || bestPizza.getNbCommandes() == 0) {
+                sb.append("Aucune pizza n'a encore été commandée\n\n");
+            } else {
+                sb.append(String.format("%s (%d commande%s)\n\n", 
+                    bestPizza.getNom(), 
+                    bestPizza.getNbCommandes(),
+                    bestPizza.getNbCommandes() > 1 ? "s" : ""));
+            }
 
             var bestIngredient = serviceProvider.ingredientService.getMeilleurIngredient();
-            sb.append(String.format("🧄 Ingrédient le plus utilisé: %s (%d utilisations)\n\n", bestIngredient.getNom(), bestIngredient.getNbUtilisation()));
+            sb.append("🧄 Ingrédient le plus utilisé: ");
+            if (bestIngredient == null || bestIngredient.getNbUtilisation() == 0) {
+                sb.append("Aucun ingrédient n'a encore été utilisé\n\n");
+            } else {
+                sb.append(String.format("%s (%d utilisation%s)\n\n", 
+                    bestIngredient.getNom(), 
+                    bestIngredient.getNbUtilisation(),
+                    bestIngredient.getNbUtilisation() > 1 ? "s" : ""));
+            }
 
             var worst = serviceProvider.livreurService.getPireLivreur();
             sb.append("🚴‍♂️ Pire livreur:\n");
-            sb.append(String.format("  %s (%d retards, %d minutes)\n", worst.getNom(), worst.getNbRetards(), worst.getTotalRetardMinutes()));
+            if (worst == null || worst.getNbRetards() == 0) {
+                sb.append("  Aucun retard enregistré\n");
+            } else {
+                sb.append(String.format("  %s (%d retard%s, %d minute%s)\n", 
+                    worst.getNom(), 
+                    worst.getNbRetards(),
+                    worst.getNbRetards() > 1 ? "s" : "",
+                    worst.getTotalRetardMinutes(),
+                    worst.getTotalRetardMinutes() > 1 ? "s" : ""));
+            }
 
             statsTextArea.setText(sb.toString());
         } catch (Exception e) {

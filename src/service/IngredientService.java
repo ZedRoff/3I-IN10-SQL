@@ -13,9 +13,12 @@ public class IngredientService {
     }
     public IngredientStat getMeilleurIngredient() throws SQLException {
     String sql = """
-        SELECT i.id, i.nom, COUNT(*) AS nb_utilisation
+        SELECT i.id, i.nom, SUM(cp.quantite) AS nb_utilisation
         FROM Ingredient i
         JOIN Composition c ON i.id = c.id_ingredient
+        JOIN Pizza p ON c.id_pizza = p.id
+        JOIN Commande_pizza cp ON p.id = cp.id_pizza
+        WHERE i.nom NOT IN ('Tomate','Fromage')  -- Exclusion uniquement de la sauce tomate
         GROUP BY i.id, i.nom
         ORDER BY nb_utilisation DESC
         LIMIT 1;
