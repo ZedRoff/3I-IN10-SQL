@@ -5,6 +5,7 @@ import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.*;
+import java.io.File;
 import javax.swing.border.EmptyBorder;
 import javax.swing.plaf.ColorUIResource;
 import javax.swing.text.html.HTMLEditorKit;
@@ -542,7 +543,16 @@ public class App {
         styleMenuButton(demoButton, verdeOliva);
         demoButton.addActionListener(e -> {
             try {
-                Desktop.getDesktop().browse(new java.net.URI("https://www.youtube.com/watch?v=dQw4w9WgXcQ"));
+                File videoFile = new File("Demo.mp4");
+                  // Vérifier si le fichier existe
+                if (videoFile.exists()) {
+                    Desktop.getDesktop().open(videoFile);
+                } else {
+                    JOptionPane.showMessageDialog(panel, 
+                        "Fichier démo introuvable.\n" +
+                        "Le fichier devrait être à : " + videoFile.getAbsolutePath(), 
+                        "Erreur", JOptionPane.ERROR_MESSAGE);
+                }
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(panel, "Erreur d'ouverture du lien.");
             }
@@ -1030,7 +1040,7 @@ public class App {
             int retard = Math.max(0, realTime - expectedTime);
 
             Timer timer = new Timer(realTime * 200, ev -> {
-                boolean gratuiteRetard = retard > 30; // Pizza gratuite si plus de 30 minutes de retard
+                boolean gratuiteRetard = retard >= 30; // Pizza gratuite si plus de 30 minutes de retard
                 boolean gratuiteFinale = gratuiteRetard || gratuiteFidelite;
 
                 // --- Choix véhicule aléatoire ---
@@ -1067,7 +1077,7 @@ public class App {
                     );
                     serviceProvider.commandePizzaService.createCommandePizza(
                         idLivraison, pizza.getId(), taille.getId(), 1, prix, gratuiteFinale,
-                        gratuiteRetard ? "Retard > 30min" : (gratuiteFidelite ? "Fidélité" : null)
+                        gratuiteRetard ? "Retard >= 30min" : (gratuiteFidelite ? "Fidélité" : null)
                     );
                     // Met à jour le solde et stats client
                     if (!gratuiteFinale) {
@@ -1329,7 +1339,7 @@ public class App {
         
         // En-tête de la fiche de livraison
         sb.append("<div style='font-size: 24px; margin-bottom: 20px; text-align: center;'>");
-        sb.append("📝 FICHE DE LIVRAISON");
+        sb.append("FICHE DE LIVRAISON");
         sb.append("</div>");
 
         // Informations client
@@ -1350,7 +1360,7 @@ public class App {
         // Statut de gratuité
         if (gratuiteRetard) {
             sb.append("<div style='color: red; margin: 15px 0; padding: 10px; background-color: #FFEBEE; border-radius: 5px;'>");
-            sb.append("⚠️ <b>OFFERTE</b> (retard > 30 min)");
+            sb.append("⚠️ <b>OFFERTE</b> (retard >= 30 min)");
             sb.append("</div>");
         } else if (gratuiteFidelite) {
             sb.append("<div style='color: #FF8C00; margin: 15px 0; padding: 10px; background-color: #FFF3E0; border-radius: 5px;'>");
@@ -1371,7 +1381,7 @@ public class App {
         
         // Affichage du retard avec couleur appropriée
         if (retard > 0) {
-            String retardColor = retard > 30 ? "#F44336" : (retard > 15 ? "#FF8C00" : "#FFD700");
+            String retardColor = retard >= 30 ? "#F44336" : (retard > 15 ? "#FF8C00" : "#FFD700");
             sb.append("<div style='color: ").append(retardColor).append("; margin: 10px 0; padding: 10px; background-color: #FFFFFF; border-radius: 5px; border: 1px solid ").append(retardColor).append(";'>");
             sb.append("<b>Retard : ").append(retard).append(" min</b>");
             sb.append("</div>");
